@@ -1,28 +1,24 @@
-print("File is running...")
 from datetime import datetime 
-def get_current_date():
+
+def get_current_date() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
-def validate_amount(input_string):
+def validate_amount(input_string: str):
     try:
-        value = float(input_string)
-        if value > 0:
-            return value
-        else:
+        cleaned_input = input_string.strip().replace("$","").replace("$", "")
+        amount = float(cleaned_input)
+
+        if amount<=0:
+            print("⚠ Amount must be greater than zero.")
             return None
+        return round(amount,2)
     except ValueError:
+        print("⚠ Invalid input. Please enter a valid decimal number.")
         return None
 
-def format_currency(amount):
-    return f"₹{amount:.2f}"
-
 if __name__ == "__main__":
-    print("Testing utils.py...\n")
-
-    print("Date:", get_current_date())
-
-    print("\nValid amount:", validate_amount("100"))
-    print("Invalid amount (text):", validate_amount("abc"))
-    print("Invalid amount (negative):", validate_amount("-50"))
-
-    print("\nFormatted currency:", format_currency(149.5))
+    # Test your utilities locally here before moving to main.py
+    # Ensures that specific code runs only when the script is executed directly
+    print(f"Testing current date: {get_current_date()}")
+    print(f"Testing valid amount: {validate_amount(' 150.50 ')}")
+    print(f"Testing invalid amount: {validate_amount('abc')}")
