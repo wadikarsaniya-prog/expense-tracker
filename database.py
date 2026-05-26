@@ -46,6 +46,25 @@ def get_all_expenses():
         cursor.execute(query)
         return cursor.fetchall()
     
+def delete_expense(expense_id: int)->bool:
+    #return true if row was del, false if id not found
+    query = "delete from expenses where id = ?;"
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, (expense_id,))
+        conn.commit()
+        # rowcount returns how many rows were affected by the query
+        return cursor.rowcount > 0
+    
+def get_expenses_by_month(year: str, month: str):
+    query = "Select id, amount, category, description, date from expenses where date like ?;"
+    target_date = f"{year}-{month}%"
+
+    with connect() as conn:
+        cursor=conn.cursor()
+        cursor.execute(query,(target_date,))
+        return cursor.fetchall()
+    
 if __name__ == "__main__":
     print("Initializing database and testing insertion...")
     create_tables()
