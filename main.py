@@ -2,6 +2,7 @@ from database import create_tables, add_expense, get_all_expenses, delete_expens
 from utils import get_current_date, validate_amount
 from config import CATEGORIES, CURRENCY_SYMBOL
 from reports import generate_monthly_report
+from charts import generate_spending_pie_chart
 def show_menu():
     print("\n" + "="*30)
     print("   Personal Expense Tracker   ")
@@ -10,7 +11,8 @@ def show_menu():
     print("2. 📋 View All Expenses")
     print("3. 🗑️ Delete An Expense")
     print("4. 📊 View Monthly Report")
-    print("5. ❌ Exit")
+    print("5. 🎨 Generate Spending Chart")
+    print("6. ❌ Exit")
     print("="*30)
 
 def handle_add_expense():
@@ -106,6 +108,23 @@ def handle_monthly_report():
     print(f"  {CURRENCY_SYMBOL}{biggest['amount']:.2f} in '{biggest['category']}' ({biggest['description']})")
     print("*"*35)
 
+def handle_generate_chart():
+    print("\n---Generate Spending Chart---")
+    year = input("Enter Year (YYYY, e.g., 2026): ").strip()
+    month = input("Enter Month (MM, e.g., 05): ").strip()
+    
+    if len(year) != 4 or len(month) != 2:
+        print("❌ Invalid format. Use YYYY and MM.")
+        return
+    
+    print("Generating your visualization...")
+    saved_path = generate_spending_pie_chart(year,month)
+
+    if saved_path:
+        print(f"📊 Success! Your chart has been generated and saved to:")
+        print(f"   -> {saved_path}")
+    else:
+        print(f"❌ No data found for {year}-{month} to visualize.")
 
 def main():
     create_tables()
@@ -123,12 +142,13 @@ def main():
         elif choice == "4":
             handle_monthly_report()
         elif choice == "5":
+            handle_generate_chart()
+        elif choice == "6":
             print("\nThank you for tracking your expenses. Goodbye!")
             break
         else:
             print("❌ Invalid choice. Please select from options 1-4.")
 
 if __name__ == "__main__":
-    print("succ")
     main()
     
