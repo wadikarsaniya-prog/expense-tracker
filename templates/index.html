@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>📊 Monthly Expense Dashboard</h1>
+    <h3>Summary for the Month of: <span style="color: #bb86fc;">{{ month }}</span></h3>
+    
+    <h2 style="background-color: #2b2b2b; padding: 15px; border-radius: 6px; display: inline-block;">
+        💰 Total Spending: <span style="color: #03dac6;">${{ "{:.2f}".format(total) }}</span>
+    </h2>
+
+    <hr style="border: 0.5px solid #333; margin: 25px 0;">
+
+    <h3>Transaction History</h3>
+    
+    <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 15px;">
+        <thead>
+            <tr style="background-color: #2b2b2b; color: #03dac6;">
+                <th style="padding: 12px; border: 1px solid #444;">ID</th>
+                <th style="padding: 12px; border: 1px solid #444;">Date</th>
+                <th style="padding: 12px; border: 1px solid #444;">Category</th>
+                <th style="padding: 12px; border: 1px solid #444;">Amount</th>
+                <th style="padding: 12px; border: 1px solid #444;">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses %}
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 12px; border: 1px solid #333;">{{ expense.id }}</td>
+                <td style="padding: 12px; border: 1px solid #333;">{{ expense.date }}</td>
+                <td style="padding: 12px; border: 1px solid #333;">
+                    <span style="background-color: #333; padding: 4px 8px; border-radius: 4px; font-size: 0.9em;">
+                        {{ expense.category }}
+                    </span>
+                </td>
+                <td style="padding: 12px; border: 1px solid #333; color: #ff7597;">
+                    ${{ "{:.2f}".format(expense.amount) }}
+                </td>
+                <td style="padding: 12px; border: 1px solid #333; color: #aaa;">
+                    {{ expense.description if expense.description else "-" }}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+    </table>
+{% endblock %}
