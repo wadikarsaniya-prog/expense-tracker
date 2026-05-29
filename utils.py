@@ -5,16 +5,22 @@ def get_current_date() -> str:
 
 def validate_amount(input_string: str):
     try:
-        cleaned_input = input_string.strip().replace("$","").replace("$", "")
+        # Clean up any accidental spaces or dollar signs
+        cleaned_input = input_string.strip().replace("$", "")
         amount = float(cleaned_input)
 
-        if amount<=0:
+        if amount <= 0:
             print("⚠ Amount must be greater than zero.")
-            return None
-        return round(amount,2)
+            # 💡 RETURN A PAIR: (False, None)
+            return False, None
+            
+        # 💡 RETURN A PAIR: (True, the rounded amount)
+        return True, round(amount, 2)
+        
     except ValueError:
         print("⚠ Invalid input. Please enter a valid decimal number.")
-        return None
+        # 💡 RETURN A PAIR: (False, None)
+        return False, None
 
 if __name__ == "__main__":
     # Test your utilities locally here before moving to main.py

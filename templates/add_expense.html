@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div style="max-width: 500px; margin: 40px auto; background-color: #1e1e1e; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+        <h2 style="color: #03dac6; margin-top: 0; margin-bottom: 20px;">➕ Add New Expense</h2>
+
+        {% if error %}
+            <div style="background-color: rgba(207, 102, 121, 0.15); color: #cf6679; border: 1px solid #cf6679; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-weight: bold; font-size: 14px;">
+                ⚠️ {{ error }}
+            </div>
+        {% endif %}
+
+        <form action="/add" method="POST">
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; color: #aaa; margin-bottom: 8px; font-size: 14px;">Transaction Date</label>
+                <input type="date" name="date" required 
+                    style="width: 100%; padding: 10px; background-color: #2b2b2b; border: 1px solid #444; border-radius: 4px; color: #fff; box-sizing: border-box;">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; color: #aaa; margin-bottom: 8px; font-size: 14px;">Amount ($)</label>
+                <input type="text" name="amount" placeholder="e.g. 45.50" required 
+                       style="width: 100%; padding: 10px; background-color: #2b2b2b; border: 1px solid #444; border-radius: 4px; color: #fff; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; color: #aaa; margin-bottom: 8px; font-size: 14px;">Category</label>
+                <select name="category" required 
+                        style="width: 100%; padding: 10px; background-color: #2b2b2b; border: 1px solid #444; border-radius: 4px; color: #fff; box-sizing: border-box;">
+                    <option value="" disabled selected>Select a category...</option>
+                    
+                    {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                    
+                </select>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; color: #aaa; margin-bottom: 8px; font-size: 14px;">Description</label>
+                <input type="text" name="description" placeholder="e.g. Weekly Groceries" 
+                       style="width: 100%; padding: 10px; background-color: #2b2b2b; border: 1px solid #444; border-radius: 4px; color: #fff; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="/expenses" style="color: #aaa; text-decoration: none; font-size: 14px;">Cancel</a>
+                <button type="submit" 
+                        style="background-color: #03dac6; color: #000; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s;"
+                        onmouseover="this.style.opacity=0.9" onmouseout="this.style.opacity=1">
+                    Save Transaction
+                </button>
+            </div>
+
+        </form>
+    </div>
+{% endblock %}
