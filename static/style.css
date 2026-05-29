@@ -1,0 +1,280 @@
+/* ==========================================================================
+   🎨 GLOBAL STYLES & RESET
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: #121212; /* Dark Mode Canvas */
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    padding: 20px 10px;
+    min-height: 100vh;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 480px; /* Perfect sizing for mobile screens */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ==========================================================================
+   🏢 HEADER LAYOUT
+   ========================================================================== */
+.header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 5px;
+}
+
+.header-main h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: #888888;
+}
+
+.btn-add-header {
+    background-color: #3b82f6; /* Accent Blue */
+    color: #ffffff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+
+.btn-add-header:hover {
+    background-color: #2563eb;
+}
+
+/* ==========================================================================
+   📊 SUMMARY & PROGRESS CARD
+   ========================================================================== */
+.main-card {
+    background-color: #1e1e1e;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.card-header h2 {
+    font-size: 1.1rem;
+    color: #aaaaaa;
+}
+
+.currency-badge {
+    background-color: #2d2d2d;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #3b82f6;
+}
+
+.budget-metrics {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.metric-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    color: #777777;
+    text-transform: uppercase;
+}
+
+.metric-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.spent-color { color: #ef4444; } /* Warm red-orange */
+.budget-color { color: #ffffff; }
+
+.metric-divider {
+    width: 1px;
+    height: 40px;
+    background-color: #333333;
+}
+
+/* 🔄 PROGRESS BAR ENGINEERING */
+.progress-container {
+    width: 100%;
+    height: 12px;
+    background-color: #2d2d2d;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    border-radius: 6px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.percentage-text {
+    font-size: 0.85rem;
+    color: #aaaaaa;
+}
+
+.status-alert {
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.alert-under { background-color: rgba(16, 185, 129, 0.15); color: #10b981; }
+.alert-over { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+/* ==========================================================================
+   🕒 TRANSACTIONS LIST
+   ========================================================================== */
+.recent-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+}
+
+.section-header h3 {
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+.view-all-link {
+    font-size: 0.85rem;
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.expense-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.expense-item {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.expense-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.expense-category-tag {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 85px;
+    text-align: center;
+}
+
+.expense-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.expense-desc {
+    font-size: 0.95rem;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.expense-date {
+    font-size: 0.75rem;
+    color: #777777;
+}
+
+.expense-amount-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.expense-cost {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.btn-delete-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px;
+    transition: transform 0.1s ease;
+}
+
+.btn-delete-icon:hover {
+    transform: scale(1.15);
+}
+
+/* Empty Safe States */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666666;
+}
+
+.btn-inline-link {
+    color: #3b82f6;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.9rem;
+}

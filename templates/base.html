@@ -1,60 +1,42 @@
-<!-- Tells the browser to interpret this document as modern HTML5 -->
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <!-- Ensures the page can display almost any text character correctly.-->
-        <meta charset="UTF-8">
-        <!-- makes website responsive -->
-        <meta name="viewport"...>
-        <title>Personal Expense Tracker</title>
-
-        <style>
-
-            body {
-                font-family: 'Segoe UI', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #121212;
-                color: #e0e0e0;
-                margin: 0;
-                padding: 20px;
-            }
-            /* nav targets main menu container */ 
-            nav{
-                background-color: #1f1f1f;
-                padding: 15px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-                display: flex;
-                gap: 15px;
-            }
-            /* targets tags inside nav */ 
-            nav a {
-                color: #03dac6;
-                text-decoration: none;
-                font-weight: bold;
-            }
-            nav a:hover {
-                color: #bb86fc;
-            }
-            .container {
-                background-color: #1f1f1f;
-                padding: 25px;
-                border-radius: 8px;
-                border: 1px solid #333;
-            }
-        </style>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Expense Tracker</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 <body>
-    <nav>
-        <a href="/">🏠 Home</a>
-        <a href="#">➕ Add Expense</a>
-        <a href="#">📋 View Expenses</a>
-        <a href="#">📊 Reports</a>
-        <a href="#">🎨 Charts</a>
-    </nav>
 
-    <div class="container">
-        {% block content %}{% endblock %}
+    <div class="app-container">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
     </div>
+
+    <nav>
+        <a href="/">
+            <span class="icon">🏠</span>
+            <span>Home</span>
+        </a>
+        <a href="/add">
+            <span class="icon">➕</span>
+            <span>Add</span>
+        </a>
+        <a href="/expenses">
+            <span class="icon">📋</span>
+            <span>Logs</span>
+        </a>
+        <a href="#">
+            <span class="icon">📊</span>
+            <span>Reports</span>
+        </a>
+        <a href="#">
+            <span class="icon">📈</span>
+            <span>Charts</span>
+        </a>
+    </nav>
 
 </body>
 </html>

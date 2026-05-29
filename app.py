@@ -2,36 +2,72 @@ import database
 import reports
 import utils
 import config
-
 from flask import Flask, render_template, request, redirect
-# __name__:  tells Flask where your project files, folders, and templates are located relative to this script
+# 💡 FIX 1: Import os and dotenv to secure session states
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 app = Flask(__name__)
+# 💡 FIX 1: Assign a secret key so flash() messaging won't crash later
+app.secret_key = os.getenv('SECRET_KEY', 'dev-fallback-key')
+
 database.create_tables()
 
 @app.route('/')
-def home(): #contains logic that executes only when user visits specific path /
+def home():
+    from datetime import datetime
+    year_str = datetime.today().strftime('%Y')
+    month_str = datetime.today().strftime('%m')
+    current_month_name = datetime.today().strftime('%B')
     
-    return render_template('index.html')
-#view
+    report_data = reports.generate_monthly_report(year_str, month_str)
+    
+    # 💡 ONE MASTERS TOTAL: Pull the single 4000.00 budget directly from config
+    global_budget = config.TOTAL_MONTHLY_BUDGET
+    total_spent = 0.0
+    
+    if report_data:
+        total_spent = report_data.get('total_spent', 0.0)
+        
+    # Calculate one overall spending percentage for the entire month
+    global_percentage = (total_spent / global_budget) * 100 if global_budget > 0 else 0
+    
+    summary_data = {
+        'total_spent': total_spent,
+        'budget': global_budget,
+        'percentage': round(global_percentage, 1)
+    }
+        
+    recent_expenses = database.get_all_expenses()[:5]
+    return render_template('index.html', summary=summary_data, recent=recent_expenses, month=current_month_name)
+
 @app.route('/expenses')
 def view_expenses():
     real_expenses = database.get_all_expenses()
-
     return render_template('view_expenses.html', expenses=real_expenses)
 
-#delete
+
 @app.route('/delete/<int:expense_id>', methods=['POST'])
 def delete_expense(expense_id):
-    database.delete_expense(expense_id)
+    try:
+        database.delete_expense(expense_id)
+    except Exception:
+        pass  # Gracefully ignore invalid IDs or connection dropouts silently
     return redirect('/expenses')
 
-#add
-@app.route('/add',methods=['GET','POST'])
-def add_expenses():
-    if request.method == 'GET':
-        return render_template('add_expense.html',categories=config.CATEGORIES, error=None)
 
-    if request.method=='POST':
+@app.route('/add', methods=['GET', 'POST'])
+def add_expense():
+    # 💡 DYNAMIC DROPDOWN: Read category names straight from your DB table keys!
+    db_budgets = database.get_all_budgets()
+    category_list = list(db_budgets.keys()) if db_budgets else list(config.CATEGORIES.keys())
+
+    if request.method == 'GET':
+        return render_template('add_expense.html', categories=category_list, error=None)
+
+    if request.method == 'POST':
         amount_input = request.form.get('amount')
         category_input = request.form.get('category')
         description_input = request.form.get('description')
@@ -40,16 +76,11 @@ def add_expenses():
         is_valid, validated_amount = utils.validate_amount(amount_input)
 
         if is_valid:
-            database.add_expense(validated_amount, category_input,description_input,date_input)
+            database.add_expense(validated_amount, category_input, description_input, date_input)
             return redirect('/expenses')
-        
         else: 
             error_msg = "Invalid amount string. Please enter a valid positive decimal number."
-            return render_template(
-                'add_expense.html', 
-                categories=config.categories, 
-                error=error_msg
-            )
+            return render_template('add_expense.html', categories=category_list, error=error_msg)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

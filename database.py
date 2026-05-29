@@ -1,6 +1,6 @@
-# database.py
 import sqlite3
-import os 
+import os
+import config
 
 DB_PATH = os.path.join("data","expenses.db")
 
@@ -19,10 +19,38 @@ def create_tables():
     date text not null
 );
 """
+    budgets_query = """
+        CREATE TABLE IF NOT EXISTS budgets (
+            category TEXT PRIMARY KEY,
+            amount REAL NOT NULL
+        );
+        """
+
     with connect() as conn:
         #create cursor obj, sends commands to db
         cursor = conn.cursor()
         cursor.execute(query)
+        cursor.execute(budgets_query)
+        conn.commit()
+
+def get_all_budgets() -> dict:
+    """ Fetches all categories and their assigned budgets as a clean dictionary. """
+    query = "SELECT category, amount FROM budgets;"
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        # Converts [( 'Food', 300.00 ), ( 'Transport', 150.00 )] into { 'Food': 300.00, ... }
+        return {row[0]: row[1] for row in rows}
+
+
+def set_budget(category: str, amount: float):
+    """ Inserts or updates a budget allocation threshold for a category. """
+    # INSERT OR REPLACE handles updating an existing row if the category already exists
+    query = "INSERT OR REPLACE INTO budgets (category, amount) VALUES (?, ?);"
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, (category, amount))
         conn.commit()
 
 def add_expense(amount: float, category: str, description: str, date: str):
@@ -38,13 +66,14 @@ def add_expense(amount: float, category: str, description: str, date: str):
         conn.commit()
 
 def get_all_expenses():
-    query = """select id, amount, category, description,
-    date from expenses
-    order by date desc;""" 
+    """ Fetches all expenses from the database, sorted from newest to oldest. """
+    query = "SELECT id, amount, category, description, date FROM expenses ORDER BY date DESC"
+    
     with connect() as conn:
         cursor = conn.cursor()
         cursor.execute(query)
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+        return rows # Using a 'with' block auto-closes the connection safely!
     
 def delete_expense(expense_id: int)->bool:
     #return true if row was del, false if id not found
@@ -65,8 +94,19 @@ def get_expenses_by_month(year: str, month: str):
         cursor.execute(query,(target_date,))
         return cursor.fetchall()
     
+# At the bottom of database.py
+# At the bottom of database.py
 if __name__ == "__main__":
-    print("Initializing database and testing insertion...")
+    print("Initializing database tables...")
     create_tables()
-    add_expense(250.00, "Food", "Dinner with team", "2026-05-17")
-    print("Current data in DB:", get_all_expenses())
+    
+    print("Seeding baseline database budgets...")
+    # Calculate a balanced split default budget per category (4000 / 7 categories ≈ 571)
+    default_split = round(config.TOTAL_MONTHLY_BUDGET / len(config.CATEGORIES), 2)
+    
+    # 💡 LOOP THROUGH THE LIST: Since config.CATEGORIES is a list, we loop over it directly
+    for category_name in config.CATEGORIES:
+        set_budget(category_name, default_split)
+    
+    print("Default baseline allocations seeded successfully!")
+    print("Current Budgets in DB:", get_all_budgets())
