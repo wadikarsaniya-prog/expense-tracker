@@ -1,6 +1,28 @@
 /* ==========================================================================
-   🎨 GLOBAL STYLES & RESET
+   🎨 GLOBAL STYLES, VARIABLES & RESET
    ========================================================================== */
+:root {
+    /* Color Palette Theme Scheme, now changing colour is j changing colour here  */
+    --bg-canvas: #121212;
+    --bg-card: #1e1e1e;
+    --bg-badge: #2d2d2d;
+    --text-main: #ffffff;
+    --text-muted: #aaaaaa;
+    --text-dim: #777777;
+    
+    /* Semantic Dynamic Signals */
+    --accent-blue: #3b82f6;
+    --accent-blue-hover: #2563eb;
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-success: #10b981;
+
+    --bg-input: #252525;
+    --border-radius-lg: 14px;
+    --border-radius-md: 8px;
+    --tap-target-min: 46px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -9,8 +31,8 @@
 }
 
 body {
-    background-color: #121212; /* Dark Mode Canvas */
-    color: #e0e0e0;
+    background-color: var(--bg-canvas);
+    color: var(--text-muted);
     display: flex;
     justify-content: center;
     padding: 20px 10px;
@@ -38,17 +60,17 @@ body {
 .header-main h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--text-main);
 }
 
 .subtitle {
     font-size: 0.85rem;
-    color: #888888;
+    color: var(--text-dim);
 }
 
 .btn-add-header {
-    background-color: #3b82f6; /* Accent Blue */
-    color: #ffffff;
+    background-color: var(--accent-blue);
+    color: var(--text-main);
     text-decoration: none;
     padding: 8px 16px;
     border-radius: 20px;
@@ -58,14 +80,14 @@ body {
 }
 
 .btn-add-header:hover {
-    background-color: #2563eb;
+    background-color: var(--accent-blue-hover);
 }
 
 /* ==========================================================================
    📊 SUMMARY & PROGRESS CARD
    ========================================================================== */
 .main-card {
-    background-color: #1e1e1e;
+    background-color: var(--bg-card);
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
@@ -80,16 +102,16 @@ body {
 
 .card-header h2 {
     font-size: 1.1rem;
-    color: #aaaaaa;
+    color: var(--text-muted);
 }
 
 .currency-badge {
-    background-color: #2d2d2d;
+    background-color: var(--bg-badge);
     padding: 4px 10px;
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: bold;
-    color: #3b82f6;
+    color: var(--accent-blue);
 }
 
 .budget-metrics {
@@ -107,7 +129,7 @@ body {
 
 .metric-label {
     font-size: 0.8rem;
-    color: #777777;
+    color: var(--text-dim);
     text-transform: uppercase;
 }
 
@@ -116,8 +138,8 @@ body {
     font-weight: 700;
 }
 
-.spent-color { color: #ef4444; } /* Warm red-orange */
-.budget-color { color: #ffffff; }
+.spent-color { color: var(--color-danger); }
+.budget-color { color: var(--text-main); }
 
 .metric-divider {
     width: 1px;
@@ -129,7 +151,7 @@ body {
 .progress-container {
     width: 100%;
     height: 12px;
-    background-color: #2d2d2d;
+    background-color: var(--bg-badge);
     border-radius: 6px;
     overflow: hidden;
     margin-bottom: 12px;
@@ -137,7 +159,7 @@ body {
 
 .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    background: linear-gradient(90deg, var(--accent-blue), #60a5fa);
     border-radius: 6px;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -150,7 +172,7 @@ body {
 
 .percentage-text {
     font-size: 0.85rem;
-    color: #aaaaaa;
+    color: var(--text-muted);
 }
 
 .status-alert {
@@ -160,8 +182,8 @@ body {
     border-radius: 6px;
 }
 
-.alert-under { background-color: rgba(16, 185, 129, 0.15); color: #10b981; }
-.alert-over { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.alert-under { background-color: rgba(16, 185, 129, 0.15); color: var(--color-success); }
+.alert-over { background-color: rgba(239, 68, 68, 0.15); color: var(--color-danger); }
 
 /* ==========================================================================
    🕒 TRANSACTIONS LIST
@@ -181,12 +203,12 @@ body {
 
 .section-header h3 {
     font-size: 1.1rem;
-    color: #ffffff;
+    color: var(--text-main);
 }
 
 .view-all-link {
     font-size: 0.85rem;
-    color: #3b82f6;
+    color: var(--accent-blue);
     text-decoration: none;
 }
 
@@ -197,7 +219,7 @@ body {
 }
 
 .expense-item {
-    background-color: #1e1e1e;
+    background-color: var(--bg-card);
     border-radius: 12px;
     padding: 14px 16px;
     display: flex;
@@ -212,8 +234,8 @@ body {
 }
 
 .expense-category-tag {
-    background-color: #2d2d2d;
-    color: #e0e0e0;
+    background-color: var(--bg-badge);
+    color: var(--text-main);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.8rem;
@@ -230,13 +252,13 @@ body {
 
 .expense-desc {
     font-size: 0.95rem;
-    color: #ffffff;
+    color: var(--text-main);
     font-weight: 500;
 }
 
 .expense-date {
     font-size: 0.75rem;
-    color: #777777;
+    color: var(--text-dim);
 }
 
 .expense-amount-actions {
@@ -248,7 +270,7 @@ body {
 .expense-cost {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--text-main);
 }
 
 .btn-delete-icon {
@@ -268,13 +290,240 @@ body {
 .empty-state {
     text-align: center;
     padding: 40px 20px;
-    color: #666666;
+    color: var(--text-dim);
 }
 
 .btn-inline-link {
-    color: #3b82f6;
+    color: var(--accent-blue);
     text-decoration: none;
     display: inline-block;
     margin-top: 8px;
     font-size: 0.9rem;
+}
+/* ==========================================================================
+   🌐  MOBILE BOTTOM NAVBAR STYLES
+   ========================================================================== */
+   .app-container{
+    padding-bottom: 80px;
+   }
+
+   .bottom-nav{
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    height: 65px;
+    background-color: var(--bg-card);
+    border-top: 1px solid var(--bg-badge);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000; /* Makes sure it floats above all other scrolling lists */
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.4);
+   }
+
+   .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-dim); /* Default dim look for unselected options */
+    font-size: 0.75rem;
+    gap: 4px;
+    width: 20%;
+    transition: color 0.2s ease;
+}
+.nav-icon {
+    font-size: 1.3rem; 
+}
+.nav-item:hover, .nav-item.active {
+    color: var(--accent-blue); 
+}
+
+/* ==========================================================================
+   🖋️  ADD EXPENSE PAGE & FORM STYLES
+   ========================================================================== */
+   .form-group{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+    width: 100%;
+   }
+
+   .form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.form-input, .form-select {
+    width: 100%;
+    min-height: var(--tap-target-min);
+    background-color: var(--bg-input);
+    border: 1px solid var(--bg-badge);
+    border-radius: var(--border-radius-md);
+    color: var(--text-main);
+    padding: 12px 16px;
+    font-size: 1rem; /* 16px standard to avoid mobile browser zoom resets */
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.form-input:focus, .form-select:focus {
+    border-color: var(--accent-blue);
+}
+
+.btn-submit-full {
+    width: 100%;
+    min-height: var(--tap-target-min);
+    background-color: var(--accent-blue);
+    color: var(--text-main);
+    border: none;
+    border-radius: var(--border-radius-md);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-submit-full:hover {
+    background-color: var(--accent-blue-hover);
+}
+
+.form-input-date {
+    max-width: 180px; /* Forces the box to stay small and neat */
+    align-self: flex-start; /* Keeps it aligned nicely to the left edge */
+}
+/* ==========================================================================
+   📋 VIEW EXPENSES PAGE (HORIZONTAL TABLES REMOVED FOR MOBILE CARDS)
+   ========================================================================== */
+.cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+/* Rounded component block with 16px padding minimum */
+.expense-card-item {
+    background-color: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    padding: 18px;
+    position: relative; /* Setup absolute anchor wall for top-right corner actions */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 30px; /* Leave explicit structural clearance for the close action element */
+}
+
+.card-amount {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.card-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--bg-badge);
+    padding-top: 10px;
+}
+
+.card-description {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Absolute positioned tap element localized top-right corner */
+.btn-card-delete-absolute {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: var(--tap-target-min);
+    height: var(--tap-target-min);
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.btn-card-delete-absolute:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* ==========================================================================
+   📊 REPORTS & HISTORICAL ANALYSIS PAGE
+   ========================================================================== */
+.report-filter-panel {
+    background-color: var(--bg-card);
+    padding: 16px;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 10px;
+}
+
+.large-stat-display {
+    text-align: center;
+    padding: 24px 10px;
+}
+
+.large-stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.large-stat-label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   🪙 INPUT CURRENCY PREFIX DECORATION
+   ========================================================================== */
+.input-prefix-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* Float the Rupee symbol inside the box container */
+.input-currency-symbol {
+    position: absolute;
+    left: 16px;
+    color: var(--text-main);
+    font-size: 1.1rem;
+    font-weight: 600;
+    pointer-events: none; /* Stops the symbol from interfering with input clicks */
+}
+
+/* Push the text typing cursor over to the right so it doesn't overlap the symbol */
+.form-input-prefixed {
+    padding-left: 38px !important; 
 }

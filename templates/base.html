@@ -4,37 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Expense Tracker</title>
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ cache_buster }}">
 </head>
 <body>
 
     <div class="app-container">
-        <div class="container">
-            {% block content %}{% endblock %}
-        </div>
+        {% block content %}{% endblock %}   
     </div>
 
-    <nav>
-        <a href="/">
-            <span class="icon">🏠</span>
-            <span>Home</span>
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+            <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
         </a>
-        <a href="/add">
-            <span class="icon">➕</span>
-            <span>Add</span>
+        <a href="/add" class="nav-item {% if request.path == '/add' %}active{% endif %}">
+            <span class="nav-icon">➕</span><span class="nav-label">Add</span>
         </a>
-        <a href="/expenses">
-            <span class="icon">📋</span>
-            <span>Logs</span>
+        <a href="/expenses" class="nav-item {% if request.path == '/expenses' %}active{% endif %}">
+            <span class="nav-icon">📋</span><span class="nav-label">History</span>
         </a>
-        <a href="#">
-            <span class="icon">📊</span>
-            <span>Reports</span>
+        <a href="/analytics" class="nav-item {% if request.path == '/analytics' %}active{% endif %}">
+            <span class="nav-icon">📊</span><span class="nav-label">Stats</span>
         </a>
-        <a href="#">
-            <span class="icon">📈</span>
-            <span>Charts</span>
+        <a href="/trends" class="nav-item {% if request.path == '/trends' %}active{% endif %}">
+            <span class="nav-icon">📈</span><span class="nav-label">Trends</span>
         </a>
     </nav>
 

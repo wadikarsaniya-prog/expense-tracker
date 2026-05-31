@@ -1,53 +1,44 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1>📜 Expense Transaction Log</h1>
-        <a href="/" style="color: #03dac6; text-decoration: none;">&larr; Back to Dashboard</a>
+<header class="header-main">
+    <div>
+        <h1>Transaction History</h1>
+        <p class="subtitle">Complete log of all expenditures</p>
     </div>
+    <a href="/" class="view-all-link" style="font-weight: 600;">Back</a>
+</header>
 
-    <table style="width: 100%; border-collapse: collapse; text-align: left; background-color: #1e1e1e; border-radius: 8px; overflow: hidden;">
-        <thead>
-            <tr style="background-color: #2b2b2b; color: #03dac6;">
-                <th style="padding: 15px; border-bottom: 2px solid #333;">Date</th>
-                <th style="padding: 15px; border-bottom: 2px solid #333;">Category</th>
-                <th style="padding: 15px; border-bottom: 2px solid #333;">Amount</th>
-                <th style="padding: 15px; border-bottom: 2px solid #333;">Description</th>
-                <th style="padding: 15px; border-bottom: 2px solid #333; text-align: center;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if expenses %}
-                {% for expense in expenses %}
-                <tr style="border-bottom: 1px solid #333;">
-                    <td style="padding: 15px;">{{ expense[4] if expense[4] is defined else expense.date }}</td>
-                    <td style="padding: 15px;">
-                        <span style="background-color: #333; padding: 4px 8px; border-radius: 4px;">
-                            {{ expense[2] if expense[2] is defined else expense.category }}
+<section class="recent-section">
+    <div class="cards-container">
+        {% if expenses %}
+            {% for expense in expenses %}
+                <div class="expense-card-item">
+                    
+                    <div class="card-top-row">
+                        <span class="expense-category-tag">{{ expense[2] }}</span>
+                        <span class="card-amount">₹{{ "%.2f"|format(expense[1]) }}</span>
+                    </div>
+                    
+                    <div class="card-meta-row">
+                        <span class="card-description">
+                            {{ expense[3] if expense[3] else "No description provided" }}
                         </span>
-                    </td>
-                    <td style="padding: 15px; color: #ff7597; font-weight: bold;">
-                        ${{ "{:.2f}".format(expense[1] if expense[1] is defined else expense.amount) }}
-                    </td>
-                    <td style="padding: 15px; color: #aaa;">
-                        {{ expense[3] if expense[3] is defined else expense.description }}
-                    </td>
-                    <td style="padding: 15px; text-align: center;">
-                        <form action="/delete/{{ expense[0] if expense[0] is defined else expense.id }}" method="POST" style="margin: 0;">
-                            <button type="submit" style="background-color: #cf6679; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
-                                Delete
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            {% else %}
-                <tr>
-                    <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
-                        No transactions found. Your ledger is empty!
-                    </td>
-                </tr>
-            {% endif %}
-        </tbody>
-    </table>
+                        <span class="expense-date">{{ expense[4] }}</span>
+                    </div>
+
+                    <form action="/delete/{{ expense[0] }}" method="POST" onsubmit="return confirm('Permanently remove this transaction record?');">
+                        <button type="submit" class="btn-card-delete-absolute" title="Remove log">✕</button>
+                    </form>
+                    
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No transactions found in your history log.</p>
+                <a href="/add" class="btn-inline-link">Log an expense now</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

@@ -2,6 +2,7 @@ import database
 import reports
 import utils
 import config
+import time
 from flask import Flask, render_template, request, redirect
 # 💡 FIX 1: Import os and dotenv to secure session states
 import os
@@ -64,9 +65,6 @@ def add_expense():
     db_budgets = database.get_all_budgets()
     category_list = list(db_budgets.keys()) if db_budgets else list(config.CATEGORIES.keys())
 
-    if request.method == 'GET':
-        return render_template('add_expense.html', categories=category_list, error=None)
-
     if request.method == 'POST':
         amount_input = request.form.get('amount')
         category_input = request.form.get('category')
@@ -80,7 +78,8 @@ def add_expense():
             return redirect('/expenses')
         else: 
             error_msg = "Invalid amount string. Please enter a valid positive decimal number."
-            return render_template('add_expense.html', categories=category_list, error=error_msg)
+            
+    return render_template('add_expense.html', categories=config.CATEGORIES, cache_buster=time.time())
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
