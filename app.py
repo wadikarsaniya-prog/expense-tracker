@@ -65,7 +65,7 @@ def delete_expense(expense_id):
 def add_expense():
     # 💡 DYNAMIC DROPDOWN: Read category names straight from your DB table keys!
     db_budgets = database.get_all_budgets()
-    category_list = list(db_budgets.keys()) if db_budgets else list(config.CATEGORIES.keys())
+    category_list = list(db_budgets.keys()) if db_budgets else config.CATEGORIES
 
     if request.method == 'POST':
         amount_input = request.form.get('amount')
