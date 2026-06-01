@@ -3,6 +3,8 @@ import reports
 import utils
 import config
 import time
+from datetime  import datetime
+import charts 
 from flask import Flask, render_template, request, redirect
 # 💡 FIX 1: Import os and dotenv to secure session states
 import os
@@ -80,6 +82,39 @@ def add_expense():
             error_msg = "Invalid amount string. Please enter a valid positive decimal number."
             
     return render_template('add_expense.html', categories=config.CATEGORIES, cache_buster=time.time())
+
+@app.route('/analytics')
+def view_analytics():
+    selected_month = request.args.get('month')
+
+    if not selected_month:
+        selected_month = datetime.today().strftime('%Y-%m')
+
+    try:
+        year_str, month_str = selected_month.split('-')
+
+    except ValueError:
+        year_str = datetime.today().strftime('%Y')
+        month_str = datetime.today().strftime('%m')
+        selected_month = f"{year_str}-{month_str}"
+
+    pie_file = charts.generate_spending_pie_chart(year_str, month_str)
+    bar_file = charts.generate_spending_bar_chart(year_str, month_str)
+    trend_file = charts.generate_spending_trend_chart(year_str, month_str)
+
+    charts_dir = "static/charts"
+
+    pie_path = f"charts/{pie_file}" if pie_file and os.path.exists(os.path.join(charts_dir, pie_file)) else None
+    bar_path = f"charts/{bar_file}" if bar_file and os.path.exists(os.path.join(charts_dir, bar_file)) else None
+    trend_path = f"charts/{trend_file}" if trend_file and os.path.exists(os.path.join(charts_dir, trend_file)) else None
+
+    return render_template(
+        'charts.html',
+        selected_month=selected_month,
+        pie_path=pie_path,
+        bar_path=bar_path,
+        trend_path=trend_path
+    )
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<header class="header-main" style="margin-bottom: 24px;">
+    <div>
+        <h1>Visual Analytics</h1>
+        <p class="subtitle">Track your spending patterns</p>
+    </div>
+    
+    <div class="month-selector-wrapper">
+        <input 
+            type="month" 
+            id="monthPicker" 
+            value="{{ selected_month }}" 
+            class="form-input"
+            style="width: auto; padding: 6px 12px; font-weight: 600;"
+            onchange="window.location.href='/analytics?month=' + this.value"
+        >
+    </div>
+</header>
+
+<main class="analytics-container" style="display: flex; flex-direction: column; gap: 24px; padding-bottom: 80px;">
+
+    <section class="main-card">
+        <h3 style="margin-bottom: 12px; font-size: 16px; color: var(--text-muted, #a0aec0);">Category Breakdown</h3>
+        {% if pie_path %}
+            <img src="{{ url_for('static', filename=pie_path) }}?v={{ range(1, 99999) | random }}" 
+                alt="Spending Pie Chart" 
+                style="width:100%; border-radius:12px; display: block;">
+        {% else %}
+            <div class="chart-placeholder" style="padding: 40px; text-align: center; background: rgba(255,255,255,0.05); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.1);">
+                <p style="color: #a0aec0; margin: 0;">📉 No transactional data available for this month.</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="main-card">
+        <h3 style="margin-bottom: 12px; font-size: 16px; color: var(--text-muted, #a0aec0);">Budget vs Actual Spending</h3>
+        {% if bar_path %}
+            <img src="{{ url_for('static', filename=bar_path) }}" alt="Spending Bar Chart" style="width:100%; border-radius:12px; display: block;">
+        {% else %}
+            <div class="chart-placeholder" style="padding: 40px; text-align: center; background: rgba(255,255,255,0.05); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.1);">
+                <p style="color: #a0aec0; margin: 0;">📊 Add expenses to generate budget comparison bar metrics.</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="main-card">
+        <h3 style="margin-bottom: 12px; font-size: 16px; color: var(--text-muted, #a0aec0);">Daily Spending Velocity</h3>
+        {% if trend_path %}
+            <img src="{{ url_for('static', filename=trend_path) }}" alt="Spending Trend Chart" style="width:100%; border-radius:12px; display: block;">
+        {% else %}
+            <div class="chart-placeholder" style="padding: 40px; text-align: center; background: rgba(255,255,255,0.05); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.1);">
+                <p style="color: #a0aec0; margin: 0;">📈 Log multi-day records to map visual trendlines.</p>
+            </div>
+        {% endif %}
+    </section>
+
+</main>
+{% endblock %}
