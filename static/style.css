@@ -45,6 +45,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding-bottom: 80px;
 }
 
 /* ==========================================================================
@@ -391,6 +392,7 @@ body {
     align-items: center;
     justify-content: center;
     margin-top: 10px;
+    margin-bottom: 30px;
     transition: background-color 0.2s ease;
 }
 

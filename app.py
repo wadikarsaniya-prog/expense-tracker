@@ -63,9 +63,7 @@ def delete_expense(expense_id):
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_expense():
-    # 💡 DYNAMIC DROPDOWN: Read category names straight from your DB table keys!
-    db_budgets = database.get_all_budgets()
-    category_list = list(db_budgets.keys()) if db_budgets else config.CATEGORIES
+    error_msg = None
 
     if request.method == 'POST':
         amount_input = request.form.get('amount')
@@ -81,8 +79,9 @@ def add_expense():
         else: 
             error_msg = "Invalid amount string. Please enter a valid positive decimal number."
             
-    return render_template('add_expense.html', categories=config.CATEGORIES, cache_buster=time.time())
-
+    return render_template('add_expense.html', 
+                         categories=config.CATEGORIES, 
+                         error=error_msg)
 @app.route('/analytics')
 def view_analytics():
     selected_month = request.args.get('month')
