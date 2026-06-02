@@ -118,8 +118,8 @@ sudo systemctl restart expense-tracker
 ```
 ## 📚 What I Learned
 
-This was my first complete software project, built over 7 weeks while 
-learning Python. Key concepts I developed hands-on:
+This was my first complete software project, built over 3 weeks. 
+Key concepts I developed hands-on:
 
 - **Web development fundamentals** — HTTP request/response cycle, 
   Flask routing, Jinja2 templating
