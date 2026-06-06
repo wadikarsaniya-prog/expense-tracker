@@ -6,19 +6,33 @@ import time
 from datetime  import datetime
 import charts 
 from flask import Flask, render_template, request, redirect
-# 💡 FIX 1: Import os and dotenv to secure session states
 import os
 from dotenv import load_dotenv
+from flask_login import LoginManager, current_user, login_required
 
 load_dotenv()
 
 app = Flask(__name__)
-# 💡 FIX 1: Assign a secret key so flash() messaging won't crash later
 app.secret_key = os.getenv('SECRET_KEY', 'dev-fallback-key')
 
 database.create_tables()
 
+login_manager = LoginManager()
+login_manager.init_app(app) #connects to flask app
+login_manager.login_view = 'auth.login'#if sm1 tries to access page wo login send them to login
+
+from auth import auth as auth_blueprint
+app.register_blueprint(auth_blueprint)
+
+@login_manager.user_loader
+def load_user(user_id):
+    user_data = database.get_user_by_id(user_id)
+    if user_data:
+        return User(user_data[0], user_data[1], user_data[2])
+    return None
+
 @app.route('/')
+@login_required
 def home():
     from datetime import datetime
     year_str = datetime.today().strftime('%Y')
@@ -43,25 +57,28 @@ def home():
         'percentage': round(global_percentage, 1)
     }
         
-    recent_expenses = database.get_all_expenses()[:5]
+    recent_expenses = database.get_all_expenses(current_user.id)[:5]
     return render_template('index.html', summary=summary_data, recent=recent_expenses, month=current_month_name)
 
 @app.route('/expenses')
+@login_required
 def view_expenses():
     real_expenses = database.get_all_expenses()
     return render_template('view_expenses.html', expenses=real_expenses)
 
 
 @app.route('/delete/<int:expense_id>', methods=['POST'])
+@login_required
 def delete_expense(expense_id):
     try:
-        database.delete_expense(expense_id)
+        database.delete_expense(expense_id, current_user.id)
     except Exception:
         pass  # Gracefully ignore invalid IDs or connection dropouts silently
     return redirect('/expenses')
 
 
 @app.route('/add', methods=['GET', 'POST'])
+@login_required
 def add_expense():
     error_msg = None
 
@@ -74,7 +91,7 @@ def add_expense():
         is_valid, validated_amount = utils.validate_amount(amount_input)
 
         if is_valid:
-            database.add_expense(validated_amount, category_input, description_input, date_input)
+            database.add_expense(current_user.id, validated_amount, category_input, description_input, date_input)
             return redirect('/expenses')
         else: 
             error_msg = "Invalid amount string. Please enter a valid positive decimal number."
@@ -82,7 +99,9 @@ def add_expense():
     return render_template('add_expense.html', 
                          categories=config.CATEGORIES, 
                          error=error_msg)
+
 @app.route('/analytics')
+@login_required
 def view_analytics():
     selected_month = request.args.get('month')
 

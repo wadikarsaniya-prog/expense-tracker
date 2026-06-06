@@ -9,104 +9,143 @@ def connect():
     return sqlite3.connect(DB_PATH)
 
 def create_tables():
-    #query is a variable that will connect to sql
-    query = """
+    
+    users_query = """
+    create table if not exists users (
+        id integer primary key autoincrement,
+        username text not null unique,
+        email text not null unique,
+        password_hash text not null
+    );
+"""
+
+    expenses_query = """
     create table if not exists expenses(
-    id integer primary key autoincrement,
-    amount real not null,
-    category text not null,
-    description text,
-    date text not null
+        id integer primary key autoincrement,
+        user_id integer not null,
+        amount real not null,
+        category text not null,
+        description text,
+        date text not null,
+        foreign key (user_id) references users (id)
 );
 """
     budgets_query = """
-        CREATE TABLE IF NOT EXISTS budgets (
-            category TEXT PRIMARY KEY,
-            amount REAL NOT NULL
-        );
-        """
+    CREATE TABLE IF NOT EXISTS budgets (
+        user_id INTEGER NOT NULL,
+        category TEXT NOT NULL,
+        amount REAL NOT NULL,
+        PRIMARY KEY (user_id, category),
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    );
+    """
 
     with connect() as conn:
         #create cursor obj, sends commands to db
         cursor = conn.cursor()
-        cursor.execute(query)
+        cursor.execute(users_query)
+        cursor.execute(expenses_query)
         cursor.execute(budgets_query)
         conn.commit()
 
-def get_all_budgets() -> dict:
-    """ Fetches all categories and their assigned budgets as a clean dictionary. """
-    query = "SELECT category, amount FROM budgets;"
+def add_user(username, email, password_hash) -> bool:
+    """ Inserts a new user. Expects a pre-hashed password string. """
+    query = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?);"
+    try:
+        with connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (username, email, password_hash))
+            conn.commit()
+            return True
+    except sqlite3.IntegrityError:
+        # Returns False if username or email is already taken
+        return False
+    
+def get_user_by_email(email):
+    """ Finds a user profile during login validation. """
+    query = "SELECT id, username, email, password_hash FROM users WHERE email = ?;"
     with connect() as conn:
         cursor = conn.cursor()
-        cursor.execute(query)
+        cursor.execute(query, (email,))
+        return cursor.fetchone() # Returns tuple or None
+
+def get_user_by_id(user_id):
+    """ Flask-Login automatically invokes this to keep track of active sessions. """
+    query = "SELECT id, username, email, password_hash FROM users WHERE id = ?;"
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, (user_id,))
+        return cursor.fetchone()
+
+def get_all_budgets(user_id: int) -> dict:
+    """ Fetches all categories and their assigned budgets as a clean dictionary. """
+    query = "SELECT category, amount FROM budgets where user_id=?;"
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query,(user_id,))
         rows = cursor.fetchall()
         # Converts [( 'Food', 300.00 ), ( 'Transport', 150.00 )] into { 'Food': 300.00, ... }
         return {row[0]: row[1] for row in rows}
 
 
-def set_budget(category: str, amount: float):
-    """ Inserts or updates a budget allocation threshold for a category. """
-    # INSERT OR REPLACE handles updating an existing row if the category already exists
-    query = "INSERT OR REPLACE INTO budgets (category, amount) VALUES (?, ?);"
+def set_budget(user_id: int, category: str, amount: float):
+    """ Inserts or updates a budget allocation threshold for a specific user. """
+    query = "INSERT OR REPLACE INTO budgets (user_id, category, amount) VALUES (?, ?, ?);"
     with connect() as conn:
         cursor = conn.cursor()
-        cursor.execute(query, (category, amount))
+        cursor.execute(query, (user_id, category, amount))
         conn.commit()
 
-def add_expense(amount: float, category: str, description: str, date: str):
+def add_expense(user_id: int,amount: float, category: str, description: str, date: str):
     query = """
-    insert into expenses (amount, category, description, date)
-    values (?,?,?,?);
+    insert into expenses (user_id, amount, category, description, date)
+    values (?,?,?,?,?);
 """
 # ? tells the database to treat that input strictly as harmless text, never as executable code
     with connect() as conn:
         cursor = conn.cursor()
         # Using placeholder tuples (?) protects your application from SQL Injection attacks.
-        cursor.execute(query, (amount,category,description,date))
+        cursor.execute(query, (user_id,amount,category,description,date))
         conn.commit()
 
-def get_all_expenses():
-    """ Fetches all expenses from the database, sorted from newest to oldest. """
-    query = "SELECT id, amount, category, description, date FROM expenses ORDER BY date DESC"
-    
+def get_all_expenses(user_id: int):
+    """ Fetches all expenses from a specific user, sorted from newest to oldest. """
+    query = "SELECT id, amount, category, description, date FROM expenses WHERE user_id = ? ORDER BY date DESC"
     with connect() as conn:
         cursor = conn.cursor()
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        return rows # Using a 'with' block auto-closes the connection safely!
-    
-def delete_expense(expense_id: int)->bool:
+        cursor.execute(query, (user_id,))
+        return cursor.fetchall()
+        
+def delete_expense(expense_id: int,user_id: int)->bool:
     #return true if row was del, false if id not found
-    query = "delete from expenses where id = ?;"
+    query = "delete from expenses where id = ? and user_id=?;"
     with connect() as conn:
         cursor = conn.cursor()
-        cursor.execute(query, (expense_id,))
+        cursor.execute(query, (expense_id,user_id))
         conn.commit()
         # rowcount returns how many rows were affected by the query
         return cursor.rowcount > 0
     
-def get_expenses_by_month(year: str, month: str):
-    query = "Select id, amount, category, description, date from expenses where date like ?;"
+def get_expenses_by_month(user_id:int,year: str, month: str):
+    query = "Select id, amount, category, description, date from expenses where user_id = ? and date like ?;"
     target_date = f"{year}-{month}%"
 
     with connect() as conn:
         cursor=conn.cursor()
-        cursor.execute(query,(target_date,))
+        cursor.execute(query,(user_id,target_date))
         return cursor.fetchall()
-    
-# At the bottom of database.py
-# At the bottom of database.py
+
 if __name__ == "__main__":
     print("Initializing database tables...")
     create_tables()
     
-    print("Seeding baseline database budgets...")
-    # Calculate a balanced split default budget per category (4000 / 7 categories ≈ 571)
+    TEST_USER_ID = 1
+    print(f"Seeding baseline database budgets for Test User ID: {TEST_USER_ID}...")
+    
     default_split = round(config.TOTAL_MONTHLY_BUDGET / len(config.CATEGORIES), 2)
     
-    # 💡 LOOP THROUGH THE LIST: Since config.CATEGORIES is a list, we loop over it directly
     for category_name in config.CATEGORIES:
-        set_budget(category_name, default_split)
+        set_budget(TEST_USER_ID, category_name, default_split)
     
     print("Default baseline allocations seeded successfully!")
-    print("Current Budgets in DB:", get_all_budgets())
+    print("Current Budgets in DB for Test User:", get_all_budgets(TEST_USER_ID))

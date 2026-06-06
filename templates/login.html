@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 400px; margin: 40px auto; padding: 20px; padding-bottom: 80px;">
+    <h2 style="text-align: center; margin-bottom: 20px;">Welcome Back</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, msg in messages %}
+                <div class="alert alert-{{ category }}" style="color: #ff4d4d; background: #ffe6e6; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+                    {{ msg }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('auth.login') }}" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+        <div>
+            <label style="display: block; margin-bottom: 5px;">Email Address</label>
+            <input type="email" name="email" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+        </div>
+        <div>
+            <label style="display: block; margin-bottom: 5px;">Password</label>
+            <input type="password" name="password" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+        </div>
+        <button type="submit" style="width: 100%; padding: 12px; border-radius: 8px; background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px;">
+            Log In
+        </button>
+    </form>
+
+    <p style="text-align: center; margin-top: 20px; font-size: 14px;">
+        Don't have an account? <a href="{{ url_for('auth.register') }}" style="color: #007bff; text-decoration: none; font-weight: bold;">Sign up</a>
+    </p>
+</div>
+{% endblock %}
