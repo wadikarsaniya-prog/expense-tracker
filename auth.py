@@ -9,9 +9,17 @@ auth = Blueprint('auth', __name__)
 @auth.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
+        username = request.form.get('username').strip()
+        email = request.form.get('email').strip()
+        password = request.form.get('password').strip()
+
+        if len(username) < 8:
+            error = "Username must be at least 8 characters"
+            return render_template('register.html', error=error)
+        
+        if len(password) < 8:
+            error = "Password must be at least 8 characters"
+            return render_template('register.html', error=error)
 
         existing_user = database.get_user_by_email(email)
         if existing_user:
