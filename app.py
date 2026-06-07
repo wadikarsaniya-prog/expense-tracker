@@ -9,7 +9,7 @@ from flask import Flask, render_template, request, redirect
 import os
 from dotenv import load_dotenv
 from flask_login import LoginManager, current_user, login_required
-
+from models import User
 load_dotenv()
 
 app = Flask(__name__)
@@ -39,7 +39,7 @@ def home():
     month_str = datetime.today().strftime('%m')
     current_month_name = datetime.today().strftime('%B')
     
-    report_data = reports.generate_monthly_report(year_str, month_str)
+    report_data = reports.generate_monthly_report(current_user.id,year_str, month_str)
     
     # 💡 ONE MASTERS TOTAL: Pull the single 4000.00 budget directly from config
     global_budget = config.TOTAL_MONTHLY_BUDGET
@@ -63,7 +63,7 @@ def home():
 @app.route('/expenses')
 @login_required
 def view_expenses():
-    real_expenses = database.get_all_expenses()
+    real_expenses = database.get_all_expenses(current_user.id)
     return render_template('view_expenses.html', expenses=real_expenses)
 
 
@@ -116,9 +116,9 @@ def view_analytics():
         month_str = datetime.today().strftime('%m')
         selected_month = f"{year_str}-{month_str}"
 
-    pie_file = charts.generate_spending_pie_chart(year_str, month_str)
-    bar_file = charts.generate_spending_bar_chart(year_str, month_str)
-    trend_file = charts.generate_spending_trend_chart(year_str, month_str)
+    pie_file = charts.generate_spending_pie_chart(current_user.id,year_str, month_str)
+    bar_file = charts.generate_spending_bar_chart(current_user.id,year_str, month_str)
+    trend_file = charts.generate_spending_trend_chart(current_user.id,year_str, month_str)
 
     charts_dir = "static/charts"
 

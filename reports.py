@@ -1,8 +1,8 @@
 from database import get_expenses_by_month
 
-def generate_monthly_report(year: str, month: str) -> dict:
+def generate_monthly_report(user_id, year: str, month: str) -> dict:
         
-    raw_data= get_expenses_by_month(year,month)
+    raw_data= get_expenses_by_month(user_id, year,month)
 
     if not raw_data:
         return {}

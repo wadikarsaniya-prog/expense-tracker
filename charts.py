@@ -6,8 +6,8 @@ from reports import generate_monthly_report
 
 CHARTS_DIR = "static/charts"
 
-def generate_spending_pie_chart(year: str, month: str) -> str:
-    report = generate_monthly_report(year,month)
+def generate_spending_pie_chart(user_id,year: str, month: str) -> str:
+    report = generate_monthly_report(user_id,year,month)
 
     if not report or not report["category_totals"]:
         return ""
@@ -59,14 +59,14 @@ def generate_spending_pie_chart(year: str, month: str) -> str:
 
 # ... Keep your existing generate_spending_pie_chart function exactly as it is ...
 
-def generate_spending_bar_chart(year: str, month: str) -> str:
+def generate_spending_bar_chart(user_id,year: str, month: str) -> str:
     """
     Placeholder stub for budget vs actual bar chart.
     Returns an empty string until fully implemented.
     """
     return ""
 
-def generate_spending_trend_chart(year: str, month: str) -> str:
+def generate_spending_trend_chart(user_id,year: str, month: str) -> str:
     """
     Placeholder stub for daily spending trendline chart.
     Returns an empty string until fully implemented.
