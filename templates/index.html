@@ -30,26 +30,6 @@
                         {{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(summary.total_spent) }}
                     </span>
                 </div>
-                <div class="metric-divider"></div>
-                <div class="metric-block">
-                    <span class="metric-label">Monthly Limit</span>
-                    <span class="metric-value budget-color">
-                        {{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(summary.budget) }}
-                    </span>
-                </div>
-            </div>
-
-            <div class="progress-container">
-                <div class="progress-bar" style="width: {{ 100 if summary.percentage > 100 else summary.percentage }}%;"></div>
-            </div>
-            
-            <div class="progress-footer">
-                <p class="percentage-text"><strong>{{ summary.percentage }}%</strong> of your monthly limit used</p>
-                {% if summary.total_spent > summary.budget %}
-                    <span class="status-alert alert-over">Over Budget!</span>
-                {% else %}
-                    <span class="status-alert alert-under">On Track</span>
-                {% endif %}
             </div>
         </section>
 
