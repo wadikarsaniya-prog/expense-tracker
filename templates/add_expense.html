@@ -49,12 +49,34 @@
 
         <div class="form-group">
             <label class="form-label" for="category">Category Selection</label>
-            <select id="category" name="category" class="form-select" required>
+            
+            <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 8px; width: 100%; align-items: center;">
+            <select id="categorySelect" name="category" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 1rem; height: 46px; box-sizing: border-box;">
                 <option value="" disabled selected>Select a category...</option>
+                
                 {% for cat in categories %}
                     <option value="{{ cat }}">{{ cat }}</option>
                 {% endfor %}
             </select>
+                
+                <button type="button" id="toggleInlineAddBtn" onclick="toggleInlineInput()" style="padding: 0 14px; height: 46px; background: #28a745; border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                    ➕ New
+                </button>
+
+                <button type="button" onclick="deleteCurrentCategory()" style="width: 46px; height: 46px; background: #dc3545; border: none; border-radius: 8px; color: #fff; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-sizing: border-box;" title="Delete selected category">
+                    🗑️
+                </button>
+            </div>
+
+            <div id="inlineCategoryBox" style="display: none; margin-top: 10px; padding: 12px; background: #1e1e1e; border-radius: 8px; border: 1px solid #333; box-sizing: border-box;">
+                <label style="color: #aaa; font-size: 0.8rem; display: block; margin-bottom: 6px; font-weight: 600; text-transform: uppercase;">Create Custom Category</label>
+                <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px;">
+                    <input type="text" id="newCategoryInput" placeholder="e.g., Subscriptions" style="width: 100%; padding: 10px; background: #2d2d2d; border: 1px solid #555; border-radius: 6px; color: #fff; font-size: 0.95rem; box-sizing: border-box;">
+                    <button type="button" onclick="saveInlineCategory()" style="padding: 0 16px; height: 38px; background: #007bff; border: none; border-radius: 6px; color: #fff; font-size: 0.9rem; font-weight: bold; cursor: pointer;">
+                        Save
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="form-group">
@@ -65,10 +87,96 @@
                 name="description" 
                 class="form-input" 
                 placeholder="e.g. Weekly Groceries, Dinner, Bus Fare"
+                style="box-sizing: border-box;"
             >
         </div>
 
-        <button type="submit" class="btn-submit-full">Save Transaction</button>
+        <button type="submit" class="btn-submit-full" style="width: 100%; margin-top: 10px;">Save Transaction</button>
     </form>
 </section>
+
+<script>
+function toggleInlineInput() {
+    const box = document.getElementById('inlineCategoryBox');
+    const btn = document.getElementById('toggleInlineAddBtn');
+    if (box.style.display === 'none') {
+        box.style.display = 'block';
+        btn.innerText = '❌';
+        btn.style.background = '#6c757d';
+        document.getElementById('newCategoryInput').focus();
+    } else {
+        box.style.display = 'none';
+        btn.innerText = '➕ New';
+        btn.style.background = '#28a745';
+    }
+}
+
+function saveInlineCategory() {
+    const inputField = document.getElementById('newCategoryInput');
+    const categoryValue = inputField.value.trim();
+    
+    if (!categoryValue) {
+        alert("Category name can't be empty.");
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('category', categoryValue);
+    
+    fetch('/api/add-category', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            const selector = document.getElementById('categorySelect');
+            const newOption = document.createElement('option');
+            newOption.value = data.category;
+            newOption.text = data.category;
+            newOption.selected = true;
+            selector.add(newOption);
+            
+            inputField.value = '';
+            toggleInlineInput();
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(err => console.error("Pipeline failure:", err));
+}
+
+function deleteCurrentCategory() {
+    const selector = document.getElementById('categorySelect');
+    const selectedValue = selector.value;
+
+    if (!selectedValue) {
+        alert("Please select a category from the dropdown first to delete it.");
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to permanently delete the category "${selectedValue}"?`)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('category_name', selectedValue);
+
+    fetch('/api/delete-category', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            selector.remove(selector.selectedIndex);
+            selector.selectedIndex = 0;
+            alert("Category removed successfully.");
+        } else {
+            alert("Error: " + data.message);
+        }
+    })
+    .catch(err => console.error("Deletion pipeline failure:", err));
+}
+</script>
 {% endblock %}

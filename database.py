@@ -40,12 +40,21 @@ def create_tables():
     );
     """
 
+    categories_query = """
+    create table if not exists categories(
+        id integer primary key autoincrement,
+        category text not null,
+        user_id integer not null
+    );
+"""
+
     with connect() as conn:
         #create cursor obj, sends commands to db
         cursor = conn.cursor()
         cursor.execute(users_query)
         cursor.execute(expenses_query)
         cursor.execute(budgets_query)
+        cursor.execute(categories_query)
         conn.commit()
 
 def add_user(username, email, password_hash) -> bool:
@@ -134,6 +143,36 @@ def get_expenses_by_month(user_id:int,year: str, month: str):
         cursor=conn.cursor()
         cursor.execute(query,(user_id,target_date))
         return cursor.fetchall()
+
+def add_category(user_id, category):
+    query = "insert into categories(user_id,category) values (?,?)"
+
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query,(user_id,category))
+        conn.commit()
+        return cursor.rowcount > 0
+    
+def get_user_categories(user_id):
+    query = "SELECT category FROM categories WHERE user_id = ?"
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, (user_id,))
+        rows = cursor.fetchall()
+        
+        return [row[0] for row in rows]
+
+def delete_category(category_id, user_id):
+    query = "delete from categories where id = ? and user_id = ?"
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query,(category_id,user_id))
+        conn.commit()
+        return cursor.rowcount > 0
+    
+    
+
+
 
 if __name__ == "__main__":
     print("Initializing database tables...")

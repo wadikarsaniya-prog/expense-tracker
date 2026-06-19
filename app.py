@@ -10,6 +10,8 @@ import os
 from dotenv import load_dotenv
 from flask_login import LoginManager, current_user, login_required
 from models import User
+from flask import jsonify
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -85,6 +87,7 @@ def add_expense():
     if request.method == 'POST':
         amount_input = request.form.get('amount')
         category_input = request.form.get('category')
+
         description_input = request.form.get('description')
         date_input = request.form.get('date')
 
@@ -95,9 +98,9 @@ def add_expense():
             return redirect('/expenses')
         else: 
             error_msg = "Invalid amount string. Please enter a valid positive decimal number."
-            
+    user_cats = database.get_user_categories(current_user.id)
     return render_template('add_expense.html', 
-                         categories=config.CATEGORIES, 
+                         categories=user_cats, 
                          error=error_msg)
 
 @app.route('/analytics')
@@ -133,6 +136,32 @@ def view_analytics():
         bar_path=bar_path,
         trend_path=trend_path
     )
+@app.route('/api/add-category', methods=['POST'])
+@login_required
+def api_add_category():
+    category_input = request.form.get('category')
+    
+    if category_input and category_input.strip():
+        cleaned_category = category_input.strip()
+        database.add_category(current_user.id, cleaned_category)
+        return jsonify({"status": "success", "category": cleaned_category}), 200
+        
+    return jsonify({"status": "error", "message": "Category cannot be empty"}), 400
 
+@app.route('/api/delete-category', methods=['POST'])
+@login_required
+def api_delete_category():
+    category_name = request.form.get('category_name')
+    
+    if category_name:
+        with database.connect() as conn:
+            # Complete structural deletion match matching ownership
+            query = "DELETE FROM categories WHERE user_id = ? AND category = ?"
+            conn.execute(query, (current_user.id, category_name))
+            conn.commit()
+        return jsonify({"status": "success"}), 200
+        
+    return jsonify({"status": "error", "message": "No category specified"}), 400
+        
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
