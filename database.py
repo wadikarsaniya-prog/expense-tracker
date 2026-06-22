@@ -44,18 +44,56 @@ def create_tables():
     create table if not exists categories(
         id integer primary key autoincrement,
         category text not null,
-        user_id integer not null
+        user_id integer not null,
+        unique(user_id, category)
+    ); """
+    
+    friendship_query = """
+    create table if not exists friendships(
+            id integer primary key autoincrement,
+            user_id integer not null,
+            friend_id integer not null,
+            status text check(status in ('pending','accepted','rejected')),
+            created_at text default current_timestamp,
+            foreign key (user_id) references users(id),
+            foreign key (friend_id) references users(id)
+        );
+    """
+    shared_expenses_query = """
+    create table if not exists shared_expenses(
+        id integer primary key autoincrement,
+        paid_by integer not null,
+        amount real,
+        description text,
+        category text,
+        date text not null,
+        FOREIGN KEY (paid_by) REFERENCES users (id)
+    );  
+"""
+
+    expense_split_query = """
+    create table if not exists expense_splits(
+        id integer primary key autoincrement,
+        shared_expense_id integer not null,
+        user_id integer not null, 
+        amount_owed real,
+        settled integer check(settled in (1,0)),
+        FOREIGN KEY (shared_expense_id) REFERENCES shared_expenses (id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users (id)
     );
 """
 
+
     with connect() as conn:
-        #create cursor obj, sends commands to db
         cursor = conn.cursor()
         cursor.execute(users_query)
         cursor.execute(expenses_query)
         cursor.execute(budgets_query)
         cursor.execute(categories_query)
-        conn.commit()
+        cursor.execute(friendship_query)
+        cursor.execute(shared_expenses_query)
+        cursor.execute(expense_split_query)
+    conn.commit()
 
 def add_user(username, email, password_hash) -> bool:
     """ Inserts a new user. Expects a pre-hashed password string. """
@@ -162,17 +200,89 @@ def get_user_categories(user_id):
         
         return [row[0] for row in rows]
 
-def delete_category(category_id, user_id):
-    query = "delete from categories where id = ? and user_id = ?"
+def delete_category(user_id, category_name):
+    with connect() as conn:
+        conn.execute("DELETE FROM categories WHERE user_id = ? AND category = ?", (user_id, category_name))
+        conn.commit()
+    
+def send_friend_request(user_id, friend_email):
+    query = "select id from users where email = ?"
     with connect() as conn:
         cursor = conn.cursor()
-        cursor.execute(query,(category_id,user_id))
+        cursor.execute(query, (friend_email,))
+        result = cursor.fetchone()
+
+        if result is None:
+            return "Sent"
+
+        friend_id = result[0]
+
+        if friend_id == user_id:
+            return "Self"
+
+        try:
+            cursor.execute(
+                "insert into friendships (user_id, friend_id, status) values (?, ?, 'pending')",
+                (user_id, friend_id)
+            )
+            conn.commit()
+            return "Sent"
+        except sqlite3.IntegrityError:
+            return "Sent"
+       
+def get_pending_requests(user_id):
+    with connect() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT friendships.id, users.username 
+                FROM friendships 
+                JOIN users ON friendships.user_id = users.id 
+                WHERE friendships.friend_id = ? AND friendships.status = 'pending'
+            """, (user_id,))
+            return cursor.fetchall()
+        except sqlite3.Error:
+            return []
+        
+
+def accept_friend_request(friendship_id,current_user_id):
+    with connect() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "update friendships set status = 'accepted' where id = ?",
+                (friendship_id,current_user_id)
+            )
+            conn.commit()
+            return "Success"
+        except sqlite3.Error:
+            return "Failed to accept request."
+
+def get_friends_list(user_id):
+    with connect() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""SELECT users.id, users.username 
+                FROM users 
+                JOIN friendships ON (friendships.user_id = users.id OR friendships.friend_id = users.id)
+                WHERE (friendships.user_id = ? OR friendships.friend_id = ?) 
+                AND friendships.status = 'accepted'
+                AND users.id != ?
+                """,(user_id,user_id,user_id))
+            result = cursor.fetchall()
+            return result
+        except sqlite3.Error:
+            return []
+        
+def reject_friend_request(friendship_id, current_user_id):
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE friendships SET status = 'rejected' WHERE id = ? AND friend_id = ?",
+            (friendship_id, current_user_id)
+        )
         conn.commit()
         return cursor.rowcount > 0
-    
-    
-
-
 
 if __name__ == "__main__":
     print("Initializing database tables...")

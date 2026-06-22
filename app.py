@@ -11,13 +11,14 @@ from dotenv import load_dotenv
 from flask_login import LoginManager, current_user, login_required
 from models import User
 from flask import jsonify
+from friends import friends_bp
 
 load_dotenv()
-
+database.create_tables()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-fallback-key')
+app.register_blueprint(friends_bp)
 
-database.create_tables()
 
 login_manager = LoginManager()
 login_manager.init_app(app) #connects to flask app
@@ -36,7 +37,6 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def home():
-    from datetime import datetime
     year_str = datetime.today().strftime('%Y')
     month_str = datetime.today().strftime('%m')
     current_month_name = datetime.today().strftime('%B')
@@ -74,8 +74,8 @@ def view_expenses():
 def delete_expense(expense_id):
     try:
         database.delete_expense(expense_id, current_user.id)
-    except Exception:
-        pass  # Gracefully ignore invalid IDs or connection dropouts silently
+    except Exception as e:
+        app.logger.error(f"Failed to delete expense {expense_id}: {e}")
     return redirect('/expenses')
 
 
@@ -152,16 +152,10 @@ def api_add_category():
 @login_required
 def api_delete_category():
     category_name = request.form.get('category_name')
-    
     if category_name:
-        with database.connect() as conn:
-            # Complete structural deletion match matching ownership
-            query = "DELETE FROM categories WHERE user_id = ? AND category = ?"
-            conn.execute(query, (current_user.id, category_name))
-            conn.commit()
+        database.delete_category(current_user.id, category_name)
         return jsonify({"status": "success"}), 200
-        
-    return jsonify({"status": "error", "message": "No category specified"}), 400
-        
+    return jsonify({"status": "error", "message": "No category specified"}), 400        
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

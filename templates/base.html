@@ -19,7 +19,15 @@
         </header>
         {% endif %}
 
-        {% block content %}{% endblock %}   
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
     </div>
 
     {% if current_user.is_authenticated %}
@@ -36,9 +44,12 @@
         <a href="/analytics" class="nav-item {% if request.path == '/analytics' %}active{% endif %}">
             <span class="nav-icon">📊</span><span class="nav-label">Stats</span>
         </a>
+        <a href="{{ url_for('friends.view_friends') }}" class="nav-item {% if request.path == '/friends' %}active{% endif %}">
+            <span class="nav-icon">👭</span><span class="nav-label">Friends</span>
+        </a>
         <a href="{{ url_for('auth.logout') }}" class="nav-item" style="color: #dc3545;">
             <span class="nav-icon">🚪</span><span class="nav-label">Logout</span>
-        </a>
+        </a>      
     </nav>
     {% endif %}
 
