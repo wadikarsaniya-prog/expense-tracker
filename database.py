@@ -250,11 +250,11 @@ def accept_friend_request(friendship_id,current_user_id):
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "update friendships set status = 'accepted' where id = ?",
+                "update friendships set status = 'accepted' where id = ? and friend_id = ?",
                 (friendship_id,current_user_id)
             )
             conn.commit()
-            return "Success"
+            return "Success" if cursor.rowcount > 0 else "Request not found or not yours to accept."
         except sqlite3.Error:
             return "Failed to accept request."
 
