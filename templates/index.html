@@ -39,6 +39,11 @@
                 <a href="/expenses" class="view-all-link">View All</a>
             </div>
 
+                <div style="display: flex; gap: 10px; margin-top: 16px;">
+                    <a href="/split-expense" class="btn-inline-link">Split Expense</a>
+                    <a href="/balances" class="btn-inline-link">View Balances</a>
+                </div>
+
             <div class="expense-list">
                 {% if recent %}
                     {% for expense in recent %}
@@ -74,6 +79,8 @@
         <a href="/add" class="nav-item"><span class="nav-icon">➕</span><span class="nav-label">Add</span></a>
         <a href="/expenses" class="nav-item"><span class="nav-icon">📋</span><span class="nav-label">History</span></a>
         <a href="/analytics" class="nav-item"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></a>
+        <a href="/friends" class="nav-item"><span class="nav-icon">👭</span><span class="nav-label">Friends</span></a>
     </nav>
+
 </body>
 </html>

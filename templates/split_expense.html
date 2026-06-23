@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<header class="header-main">
+    <div>
+        <h1>Split an Expense</h1>
+        <p class="subtitle">Share a cost with friends</p>
+    </div>
+    <a href="/" class="view-all-link" style="font-weight: 600;">Cancel</a>
+</header>
+
+<section class="main-card">
+
+    {% if error %}
+        <div style="background-color: rgba(239, 68, 68, 0.15); color: #cf6679; border: 1px solid #cf6679; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; font-size: 14px;">
+            ⚠️ {{ error }}
+        </div>
+    {% endif %}
+
+    {% if not friends %}
+        <div class="empty-state">
+            <p>You need to add friends before you can split an expense.</p>
+            <a href="/friends" class="btn-inline-link">Go to Friends</a>
+        </div>
+    {% else %}
+    <form action="/split-expense" method="POST">
+
+        <div class="form-group">
+            <label class="form-label" for="date">Date</label>
+            <input type="date" id="date" name="date" class="form-input form-input-date" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="amount">Total Amount</label>
+            <div class="input-prefix-wrapper">
+                <span class="input-currency-symbol">₹</span>
+                <input type="number" step="0.01" id="amount" name="amount" class="form-input form-input-prefixed" placeholder="0.00" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="category">Category</label>
+            <select id="category" name="category" class="form-select" required>
+                <option value="" disabled selected>Select a category...</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="description">Description</label>
+            <input type="text" id="description" name="description" class="form-input" placeholder="e.g. Dinner at Cafe">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Split With</label>
+            {% for friend_id, username in friends %}
+                <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #1a1a1a; border-radius: 8px; margin-bottom: 8px;">
+                    <input type="checkbox" name="friends" value="{{ friend_id }}" style="width: 20px; height: 20px;">
+                    {{ username }}
+                </label>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn-submit-full">Split Expense</button>
+    </form>
+    {% endif %}
+</section>
+{% endblock %}

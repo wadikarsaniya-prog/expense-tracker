@@ -1,77 +1,82 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4" style="max-width: 600px;">
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+<header class="header-main">
+    <div>
+        <h1>👥 Manage Friends</h1>
+        <p class="subtitle">Connect and split expenses</p>
+    </div>
+</header>
+
+<section class="main-card">
+    <h3 style="color: var(--text-main); font-size: 1rem; margin-bottom: 12px;">Add a New Friend</h3>
+    <form action="{{ url_for('friends.add_friend') }}" method="POST" style="display: flex; gap: 10px;">
+        <input 
+            type="email" 
+            name="friend_email" 
+            class="form-input" 
+            placeholder="Enter friend's email address" 
+            required
+            style="flex: 1;"
+        >
+        <button type="submit" class="btn-add-header" style="white-space: nowrap;">Add</button>
+    </form>
+</section>
+
+<section class="recent-section">
+    <div class="section-header">
+        <h3>Pending Requests</h3>
+    </div>
+
+    <div class="expense-list">
+        {% if pending %}
+            {% for request_id, name in pending %}
+                <div class="expense-item">
+                    <div class="expense-info">
+                        <div class="expense-details">
+                            <p class="expense-desc"><strong>{{ name }}</strong> wants to connect</p>
+                        </div>
+                    </div>
+                    <div class="expense-amount-actions">
+                        <form action="{{ url_for('friends.accept_friend', id=request_id) }}" method="POST">
+                            <button type="submit" class="btn-delete-icon" title="Accept" style="color: var(--color-success); font-size: 1.4rem;">✓</button>
+                        </form>
+                        <form action="{{ url_for('friends.reject_friend', id=request_id) }}" method="POST">
+                            <button type="submit" class="btn-delete-icon" title="Decline" style="color: var(--color-danger); font-size: 1.4rem;">✕</button>
+                        </form>
+                    </div>
                 </div>
             {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No pending friend requests.</p>
+            </div>
         {% endif %}
-    {% endwith %}
+    </div>
+</section>
 
-    <h2>👥 Manage Friends</h2>
-    <hr>
-
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title">Add a New Friend</h5>
-            <form action="{{ url_for('friends.add_friend') }}" method="POST" class="d-flex gap-2">
-                <input type="email" name="friend_email" class="form-control" placeholder="Enter friend's email address" required>
-                <button type="submit" class="btn btn-primary">Add</button>
-            </form>
-        </div>
+<section class="recent-section">
+    <div class="section-header">
+        <h3>Your Friends</h3>
     </div>
 
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-warning text-dark font-weight-bold">
-            Pending Requests Waiting For You
-        </div>
-        <ul class="list-group list-group-flush">
-            {% if pending %}
-                {% for request_id, username in pending %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><strong>{{ username }}</strong> wants to connect</span>
-                        <div class="d-flex gap-2">
-                            <form action="{{ url_for('friends.accept_friend', id=request_id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-sm btn-success">Accept</button>
-                            </form>
-                            <form action="{{ url_for('friends.reject_friend', id=request_id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-sm btn-danger">Decline</button>
-                            </form>
+    <div class="expense-list">
+        {% if friends %}
+            {% for friend_id, name in friends %}
+                <div class="expense-item">
+                    <div class="expense-info">
+                        <span class="expense-category-tag">👤</span>
+                        <div class="expense-details">
+                            <p class="expense-desc">{{ name }}</p>
                         </div>
-                    </li>
-                {% endfor %}
-            {% else %}
-                <li class="list-group-item text-muted text-center py-3">No pending friend requests.</li>
-            {% endif %}
-        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>You haven't added any friends yet.</p>
+            </div>
+        {% endif %}
     </div>
-
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white font-weight-bold">
-            Your Friends List
-        </div>
-        <ul class="list-group list-group-flush">
-            {% if friends %}
-                {% for friend_id, username in friends %}
-                    <li class="list-group-item d-flex align-items-center">
-                        <div class="rounded-circle bg-light d-flex justify-content-center align-items-center border me-3" style="width: 40px; height: 40px;">
-                            👤
-                        </div>
-                        <div>
-                            <span class="d-block font-weight-bold">{{ username }}</span>
-                        </div>
-                    </li>
-                {% endfor %}
-            {% else %}
-                <li class="list-group-item text-muted text-center py-3">You haven't added any friends yet.</li>
-            {% endif %}
-        </ul>
-    </div>
-
-</div>
+</section>
 {% endblock %}

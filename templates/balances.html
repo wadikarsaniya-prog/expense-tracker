@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<header class="header-main">
+    <div>
+        <h1>Balances</h1>
+        <p class="subtitle">Who owes who</p>
+    </div>
+    <a href="/split-expense" class="btn-add-header">+ Split Expense</a>
+</header>
+
+<section class="main-card">
+    {% if balances %}
+        {% for friend_id, username, net in balances %}
+            <div class="expense-item">
+                <div class="expense-info">
+                    <div class="expense-details">
+                        <p class="expense-desc">{{ username }}</p>
+                        {% if net > 0 %}
+                            <p style="color: #22c55e; font-weight: 600;">Owes you ₹{{ "%.2f"|format(net) }}</p>
+                        {% elif net < 0 %}
+                            <p style="color: #ef4444; font-weight: 600;">You owe ₹{{ "%.2f"|format(-net) }}</p>
+                        {% else %}
+                            <p style="color: #888;">All settled up</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if net != 0 %}
+                <form action="/settle/{{ friend_id }}" method="POST">
+                    <button type="submit" class="btn-card-delete-absolute" style="background: #22c55e; color: white; border-radius: 6px; padding: 6px 12px; width: auto; height: auto; position: static;">Settle</button>
+                </form>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>No shared expenses yet.</p>
+            <a href="/split-expense" class="btn-inline-link">Split your first expense</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

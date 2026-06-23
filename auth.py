@@ -9,16 +9,21 @@ auth = Blueprint('auth', __name__)
 @auth.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
-        username = request.form.get('username').strip()
+        name = request.form.get('name', '').strip()
         email = request.form.get('email').strip()
         password = request.form.get('password').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
 
-        if len(username) < 8:
-            error = "Username must be at least 8 characters"
+        if password != confirm_password:
+            error = "Passwords do not match."
             return render_template('register.html', error=error)
-        
+       
         if len(password) < 8:
             error = "Password must be at least 8 characters"
+            return render_template('register.html', error=error)
+
+        if len(name) < 2:
+            error = "Please enter your name."
             return render_template('register.html', error=error)
 
         existing_user = database.get_user_by_email(email)
@@ -26,15 +31,14 @@ def register():
             flash('Email already registered.', 'error')
             return redirect(url_for('auth.register'))
         
-        hased_password = generate_password_hash(password, method='scrypt')
+        hashed_password = generate_password_hash(password, method='scrypt')
 
-        success = database.add_user(username,email,hased_password)
+        success = database.add_user(name, email,hashed_password)
         if success:
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('auth.login'))
         else:
-                flash('Username or Email already taken.', 'error')
-                return redirect(url_for('auth.register'))
+            error = "Email already registered"
     return render_template('register.html')
 
 @auth.route('/login',methods=['GET','POST'])

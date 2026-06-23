@@ -157,5 +157,60 @@ def api_delete_category():
         return jsonify({"status": "success"}), 200
     return jsonify({"status": "error", "message": "No category specified"}), 400        
 
+@app.route('/split-expense', methods = ['GET','POST'])
+@login_required
+def split_expense():
+    error_msg = None
+
+    if request.method == 'POST':
+        amount_input = request.form.get('amount')
+        description_input = request.form.get('description')
+        category_input = request.form.get('category')
+        date_input = request.form.get('date')
+        selected_friend_ids = request.form.getlist('friends')
+
+        is_valid, validated_amount = utils.validate_amount(amount_input)
+
+        if not is_valid:
+            error_msg = "Invalid amount. Please enter a valid positive number."
+        elif not selected_friend_ids:
+            error_msg = "Please select at least one friend to split with."
+        else:
+            friend_ids_int = [int(fid) for fid in selected_friend_ids]
+            database.create_shared_expenses(
+                paid_by=current_user.id,
+                amount=validated_amount,
+                description=description_input,
+                category=category_input,
+                date=date_input,
+                split_by=friend_ids_int
+            )
+            return redirect('/balances')
+        
+    friends_list = database.get_friends_list(current_user.id)
+    user_cats = database.get_user_categories(current_user.id)
+
+    return render_template('split_expense.html', 
+                         friends=friends_list, 
+                         categories=user_cats, 
+                         error=error_msg)
+
+@app.route('/balances')
+@login_required
+def view_balances():
+    balances = database.get_balances(current_user.id)
+    return render_template('balances.html', balances=balances)
+
+@app.route('/settle/<int:friend_id>', methods=['POST'])
+@login_required
+def settle(friend_id):
+    rows_updated = database.settle_up(current_user.id, friend_id)
+    if rows_updated > 0:
+        flash("Settled up successfully!", "success")
+    else:
+        flash("Nothing to settle.", "info")
+    return redirect('/balances')
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

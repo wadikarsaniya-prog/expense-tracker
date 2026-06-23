@@ -12,8 +12,8 @@ def create_tables():
     
     users_query = """
     create table if not exists users (
+        name text not null,
         id integer primary key autoincrement,
-        username text not null unique,
         email text not null unique,
         password_hash text not null
     );
@@ -95,22 +95,21 @@ def create_tables():
         cursor.execute(expense_split_query)
     conn.commit()
 
-def add_user(username, email, password_hash) -> bool:
-    """ Inserts a new user. Expects a pre-hashed password string. """
-    query = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?);"
+def add_user(name, email, password_hash) -> bool:
+    query = "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?);"
     try:
         with connect() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (username, email, password_hash))
+            cursor.execute(query, (name, email, password_hash))
             conn.commit()
             return True
     except sqlite3.IntegrityError:
-        # Returns False if username or email is already taken
+        # Returns False if email is already taken
         return False
     
 def get_user_by_email(email):
     """ Finds a user profile during login validation. """
-    query = "SELECT id, username, email, password_hash FROM users WHERE email = ?;"
+    query = "SELECT id,name, email, password_hash FROM users WHERE email = ?;"
     with connect() as conn:
         cursor = conn.cursor()
         cursor.execute(query, (email,))
@@ -118,7 +117,7 @@ def get_user_by_email(email):
 
 def get_user_by_id(user_id):
     """ Flask-Login automatically invokes this to keep track of active sessions. """
-    query = "SELECT id, username, email, password_hash FROM users WHERE id = ?;"
+    query = "SELECT id, name, email, password_hash FROM users WHERE id = ?;"
     with connect() as conn:
         cursor = conn.cursor()
         cursor.execute(query, (user_id,))
@@ -235,7 +234,7 @@ def get_pending_requests(user_id):
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                SELECT friendships.id, users.username 
+                SELECT friendships.id
                 FROM friendships 
                 JOIN users ON friendships.user_id = users.id 
                 WHERE friendships.friend_id = ? AND friendships.status = 'pending'
@@ -262,7 +261,7 @@ def get_friends_list(user_id):
     with connect() as conn:
         cursor = conn.cursor()
         try:
-            cursor.execute("""SELECT users.id, users.username 
+            cursor.execute("""SELECT users.id 
                 FROM users 
                 JOIN friendships ON (friendships.user_id = users.id OR friendships.friend_id = users.id)
                 WHERE (friendships.user_id = ? OR friendships.friend_id = ?) 
@@ -284,17 +283,91 @@ def reject_friend_request(friendship_id, current_user_id):
         conn.commit()
         return cursor.rowcount > 0
 
+def create_shared_expenses(paid_by, amount, description, category, date, split_by):
+    all_participants = split_by + [paid_by]
+    num_people = len(all_participants)
+    share_per_person = round(amount / num_people, 2)
+
+    with connect() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "insert into shared_expenses (paid_by, amount, description, category, date) values (?, ?, ?, ?, ?)",
+            (paid_by, amount, description, category, date)
+        )
+        shared_expense_id = cursor.lastrowid
+
+        for user_id in all_participants:
+            settled = 1 if user_id == paid_by else 0
+            cursor.execute(
+                "insert into expense_splits (shared_expense_id, user_id, amount_owed, settled) values (?, ?, ?, ?)",
+                (shared_expense_id, user_id, share_per_person, settled)
+            )
+        
+        conn.commit()
+        return shared_expense_id
+
+def get_balances(user_id):
+
+    query = """
+        SELECT 
+            CASE WHEN se.paid_by = ? THEN es.user_id ELSE se.paid_by END as other_user_id,
+            CASE WHEN se.paid_by = ? THEN es.amount_owed ELSE -es.amount_owed END as balance_contribution
+        FROM expense_splits es
+        JOIN shared_expenses se ON es.shared_expense_id = se.id
+        WHERE es.settled = 0
+        AND (se.paid_by = ? OR es.user_id = ?)
+        AND es.user_id != se.paid_by
+    """
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, (user_id, user_id, user_id, user_id))
+        rows = cursor.fetchall()
+
+    balances = {}
+    for other_user_id, contribution in rows:
+        balances[other_user_id] = balances.get(other_user_id, 0) + contribution
+
+    result = []
+    for other_user_id, net in balances.items():
+        username_row = get_user_by_id(other_user_id)
+        username = username_row[1] if username_row else "Unknown"
+        result.append((other_user_id, username, round(net, 2)))
+
+    return result
+
+def settle_up (user_id, friend_id):
+    query = """
+        update expense_splits
+        set settled = 1
+        where settled = 0
+        and user_id in (?,?)
+        and shared_expense_id in (
+            select if from shared_expenses where paid_by in (?,?)
+        )
+"""
+
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, (user_id, friend_id, user_id, friend_id))
+        conn.commit()
+        return cursor.rowcount
+
+
 if __name__ == "__main__":
-    print("Initializing database tables...")
-    create_tables()
-    
-    TEST_USER_ID = 1
-    print(f"Seeding baseline database budgets for Test User ID: {TEST_USER_ID}...")
-    
-    default_split = round(config.TOTAL_MONTHLY_BUDGET / len(config.CATEGORIES), 2)
-    
-    for category_name in config.CATEGORIES:
-        set_budget(TEST_USER_ID, category_name, default_split)
-    
-    print("Default baseline allocations seeded successfully!")
-    print("Current Budgets in DB for Test User:", get_all_budgets(TEST_USER_ID))
+    print("Testing shared expense creation...")
+    new_id = create_shared_expenses(
+        paid_by=1, 
+        amount=600, 
+        description="Test Dinner", 
+        category="Food", 
+        date="2026-06-22", 
+        split_by=[2]
+    )
+    print(f"Created shared expense ID: {new_id}")
+
+    print("\nBalances for user 1:")
+    print(get_balances(1))
+
+    print("\nBalances for user 2:")
+    print(get_balances(2))
