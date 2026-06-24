@@ -5,7 +5,7 @@ import config
 import time
 from datetime  import datetime
 import charts 
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash
 import os
 from dotenv import load_dotenv
 from flask_login import LoginManager, current_user, login_required

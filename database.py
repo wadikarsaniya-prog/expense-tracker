@@ -219,6 +219,20 @@ def send_friend_request(user_id, friend_email):
         if friend_id == user_id:
             return "Self"
 
+        cursor.execute("""
+            SELECT status FROM friendships
+            WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)
+        """, (user_id, friend_id, friend_id, user_id))
+        existing = cursor.fetchone()
+
+        if existing is not None:
+            if existing[0] == 'rejected':
+                cursor.execute("DELETE FROM friendships WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)", 
+                            (user_id, friend_id, friend_id, user_id))
+                conn.commit()
+            else:
+                return "Sent"
+
         try:
             cursor.execute(
                 "insert into friendships (user_id, friend_id, status) values (?, ?, 'pending')",
@@ -234,7 +248,7 @@ def get_pending_requests(user_id):
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                SELECT friendships.id
+                SELECT friendships.id, users.name
                 FROM friendships 
                 JOIN users ON friendships.user_id = users.id 
                 WHERE friendships.friend_id = ? AND friendships.status = 'pending'
@@ -261,7 +275,7 @@ def get_friends_list(user_id):
     with connect() as conn:
         cursor = conn.cursor()
         try:
-            cursor.execute("""SELECT users.id 
+            cursor.execute("""SELECT users.id, users.name
                 FROM users 
                 JOIN friendships ON (friendships.user_id = users.id OR friendships.friend_id = users.id)
                 WHERE (friendships.user_id = ? OR friendships.friend_id = ?) 
@@ -290,12 +304,14 @@ def create_shared_expenses(paid_by, amount, description, category, date, split_b
 
     with connect() as conn:
         cursor = conn.cursor()
-
         cursor.execute(
             "insert into shared_expenses (paid_by, amount, description, category, date) values (?, ?, ?, ?, ?)",
             (paid_by, amount, description, category, date)
         )
         shared_expense_id = cursor.lastrowid
+
+        payer_row = get_user_by_id(paid_by)
+        payer_name = payer_row[1] if payer_row else "someone"
 
         for user_id in all_participants:
             settled = 1 if user_id == paid_by else 0
@@ -303,7 +319,17 @@ def create_shared_expenses(paid_by, amount, description, category, date, split_b
                 "insert into expense_splits (shared_expense_id, user_id, amount_owed, settled) values (?, ?, ?, ?)",
                 (shared_expense_id, user_id, share_per_person, settled)
             )
-        
+
+            if user_id == paid_by:
+                split_description = f"{description} (split {num_people} ways)" if description else f"Split expense ({num_people} ways)"
+            else:
+                split_description = f"{description} (split with {payer_name})" if description else f"Split with {payer_name}"
+
+            cursor.execute(
+                "insert into expenses (user_id, amount, category, description, date) values (?, ?, ?, ?, ?)",
+                (user_id, share_per_person, category, split_description, date)
+            )
+
         conn.commit()
         return shared_expense_id
 
@@ -343,7 +369,7 @@ def settle_up (user_id, friend_id):
         where settled = 0
         and user_id in (?,?)
         and shared_expense_id in (
-            select if from shared_expenses where paid_by in (?,?)
+            select id from shared_expenses where paid_by in (?,?)
         )
 """
 
@@ -352,6 +378,18 @@ def settle_up (user_id, friend_id):
         cursor.execute(query, (user_id, friend_id, user_id, friend_id))
         conn.commit()
         return cursor.rowcount
+
+def remove_friend(user_id, friend_id):
+    query = """
+        delete from friendships
+        where status = 'accepted'
+        and ((user_id = ? and friend_id = ?) or (user_id = ? and friend_id = ?))
+"""
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, (user_id, friend_id, friend_id, user_id))
+        conn.commit()
+        return cursor.rowcount > 0
 
 
 if __name__ == "__main__":

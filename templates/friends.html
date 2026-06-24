@@ -70,6 +70,9 @@
                             <p class="expense-desc">{{ name }}</p>
                         </div>
                     </div>
+                    <form action="{{ url_for('friends.remove_friend', friend_id=friend_id) }}" method="POST" onsubmit="return confirm('Remove this friend? This will not delete past split expenses.');">
+                        <button type="submit" class="btn-delete-icon" title="Remove friend" style="color: var(--color-danger); font-size: 1.2rem;">✕</button>
+                    </form>
                 </div>
             {% endfor %}
         {% else %}

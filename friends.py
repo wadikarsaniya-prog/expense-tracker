@@ -34,6 +34,16 @@ def accept_friend(id):
         flash("Could not accept request")
     return redirect(url_for('friends.view_friends'))
 
+@friends_bp.route('/friends/remove/<int:friend_id>', methods=['POST'])
+@login_required
+def remove_friend(friend_id):
+    success = database.remove_friend(current_user.id, friend_id)
+    if success:
+        flash("Friend removed.", "info")
+    else:
+        flash("Could not remove friend.", "danger")
+    return redirect(url_for('friends.view_friends'))
+
 @friends_bp.route('/friends/reject/<int:id>', methods=['POST'])
 @login_required
 def reject_friend(id):
