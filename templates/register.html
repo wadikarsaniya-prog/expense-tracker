@@ -14,26 +14,49 @@
         {% endif %}
     {% endwith %}
 
+    {% if error %}
+        <div class="alert alert-danger" style="color: #ff4d4d; background: #ffe6e6; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+            {{ error }}
+        </div>
+    {% endif %}
+
     <form action="{{ url_for('auth.register') }}" method="POST" onsubmit="return validatePasswords()" style="display: flex; flex-direction: column; gap: 15px;">
 
         <div>
             <label style="display: block; margin-bottom: 5px;">Name</label>
             <input type="text" name="name" required minlength="2" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
         </div>
-        
+
         <div>
             <label style="display: block; margin-bottom: 5px;">Email Address</label>
             <input type="email" name="email" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
         </div>
+
         <div>
             <label style="display: block; margin-bottom: 5px;">Password</label>
-            <input type="password" id="password" name="password" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+            <div style="position: relative;">
+                <input type="password" id="password" name="password" required minlength="8"
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                <button type="button" onclick="togglePassword('password', this)"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px;">
+                    👁️
+                </button>
+            </div>
         </div>
+
         <div>
             <label style="display: block; margin-bottom: 5px;">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+            <div style="position: relative;">
+                <input type="password" id="confirm_password" name="confirm_password" required minlength="8"
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                <button type="button" onclick="togglePassword('confirm_password', this)"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px;">
+                    👁️
+                </button>
+            </div>
             <span id="error-msg" style="color: #ff4d4d; font-size: 12px; display: none; margin-top: 5px;">Passwords do not match!</span>
         </div>
+
         <button type="submit" style="width: 100%; padding: 12px; border-radius: 8px; background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px;">
             Sign Up
         </button>
@@ -49,13 +72,24 @@ function validatePasswords() {
     var pass = document.getElementById("password").value;
     var confirmPass = document.getElementById("confirm_password").value;
     var errorSpan = document.getElementById("error-msg");
-    
+
     if (pass !== confirmPass) {
         errorSpan.style.display = "block";
-        return false; // Blocks form submission execution path
+        return false;
     }
     errorSpan.style.display = "none";
     return true;
+}
+
+function togglePassword(fieldId, button) {
+    const field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+        button.textContent = "🙈";
+    } else {
+        field.type = "password";
+        button.textContent = "👁️";
+    }
 }
 </script>
 {% endblock %}
