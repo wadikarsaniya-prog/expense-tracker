@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 import database
 from models import User
+import secrets
 
 auth = Blueprint('auth', __name__)
 
@@ -67,6 +68,42 @@ def login():
             return redirect(url_for('auth.login'))
 
     return render_template('login.html')
+
+@auth.route('/login/google')
+def google_login():
+    redirect_uri = url_for('auth.google_callback', _external=True)
+    return current_app.extensions['authlib.integrations.flask_client'].google.authorize_redirect(redirect_uri)
+
+
+@auth.route('/login/google/callback')
+def google_callback():
+    google = current_app.extensions['authlib.integrations.flask_client'].google
+    token = google.authorize_access_token()
+    user_info = token.get('userinfo')
+
+    if not user_info:
+        flash("Google login failed.", "danger")
+        return redirect(url_for('auth.login'))
+
+    email = user_info['email']
+    name = user_info.get('name', email.split('@')[0])
+
+    existing_user = database.get_user_by_email(email)
+
+    if existing_user:
+        user_id = existing_user[0]
+    else:
+        random_password = secrets.token_hex(16)
+        password_hash = generate_password_hash(random_password)
+        database.add_user(name, email, password_hash)
+        new_user = database.get_user_by_email(email)
+        user_id = new_user[0]
+
+    user_data = database.get_user_by_id(user_id)
+    user_obj = User(user_data[0], user_data[1], user_data[2])
+    login_user(user_obj)
+
+    return redirect('/')
 
 @auth.route('/logout')
 @login_required

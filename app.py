@@ -12,11 +12,22 @@ from flask_login import LoginManager, current_user, login_required
 from models import User
 from flask import jsonify
 from friends import friends_bp
+from authlib.integrations.flask_client import OAuth
 
 load_dotenv()
 database.create_tables()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-fallback-key')
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
+
 app.register_blueprint(friends_bp)
 
 
