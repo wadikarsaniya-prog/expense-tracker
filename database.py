@@ -297,11 +297,9 @@ def reject_friend_request(friendship_id, current_user_id):
         conn.commit()
         return cursor.rowcount > 0
 
-def create_shared_expenses(paid_by, amount, description, category, date, split_by):
-    all_participants = split_by + [paid_by]
-    num_people = len(all_participants)
-    share_per_person = round(amount / num_people, 2)
-
+def create_shared_expenses(paid_by, amount, description, category, date, split_details):
+    num_people = len(split_details)
+    
     with connect() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -313,11 +311,11 @@ def create_shared_expenses(paid_by, amount, description, category, date, split_b
         payer_row = get_user_by_id(paid_by)
         payer_name = payer_row[1] if payer_row else "someone"
 
-        for user_id in all_participants:
+        for user_id, amount_owed in split_details:
             settled = 1 if user_id == paid_by else 0
             cursor.execute(
                 "insert into expense_splits (shared_expense_id, user_id, amount_owed, settled) values (?, ?, ?, ?)",
-                (shared_expense_id, user_id, share_per_person, settled)
+                (shared_expense_id, user_id, amount_owed, settled)
             )
 
             if user_id == paid_by:
@@ -327,7 +325,7 @@ def create_shared_expenses(paid_by, amount, description, category, date, split_b
 
             cursor.execute(
                 "insert into expenses (user_id, amount, category, description, date) values (?, ?, ?, ?, ?)",
-                (user_id, share_per_person, category, split_description, date)
+                (user_id, amount_owed, category, split_description, date)
             )
 
         conn.commit()

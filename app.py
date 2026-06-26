@@ -179,6 +179,7 @@ def split_expense():
         category_input = request.form.get('category')
         date_input = request.form.get('date')
         selected_friend_ids = request.form.getlist('friends')
+        split_mode = request.form.get('split_mode', 'equal')
 
         is_valid, validated_amount = utils.validate_amount(amount_input)
 
@@ -188,16 +189,38 @@ def split_expense():
             error_msg = "Please select at least one friend to split with."
         else:
             friend_ids_int = [int(fid) for fid in selected_friend_ids]
-            database.create_shared_expenses(
-                paid_by=current_user.id,
-                amount=validated_amount,
-                description=description_input,
-                category=category_input,
-                date=date_input,
-                split_by=friend_ids_int
-            )
-            return redirect('/balances')
-        
+            all_participants = friend_ids_int + [current_user.id]
+
+            if split_mode == 'equal':
+                share = round(validated_amount / len(all_participants), 2)
+                split_details = [(uid, share) for uid in all_participants]
+            else:
+                # Custom split - read each person's specific amount from the form
+                split_details = []
+                total_entered = 0.0
+                for uid in all_participants:
+                    custom_amount = request.form.get(f'custom_amount_{uid}')
+                    is_valid_custom, validated_custom = utils.validate_amount(custom_amount)
+                    if not is_valid_custom:
+                        error_msg = "Please enter valid amounts for everyone."
+                        break
+                    split_details.append((uid, validated_custom))
+                    total_entered += validated_custom
+
+            if not error_msg and round(total_entered, 2) != round(validated_amount, 2):
+                    error_msg = f"Custom amounts (₹{total_entered:.2f}) must add up to the total (₹{validated_amount:.2f})."
+
+            if not error_msg:
+                database.create_shared_expenses(
+                    paid_by=current_user.id,
+                    amount=validated_amount,
+                    description=description_input,
+                    category=category_input,
+                    date=date_input,
+                    split_details=split_details
+                )
+                return redirect('/balances')
+            
     friends_list = database.get_friends_list(current_user.id)
     user_cats = database.get_user_categories(current_user.id)
 

@@ -54,14 +54,62 @@
         </div>
 
         <div class="form-group">
-            <label class="form-label">Split With</label>
-            {% for friend_id, username in friends %}
-                <label style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #1a1a1a; border-radius: 8px; margin-bottom: 8px;">
-                    <input type="checkbox" name="friends" value="{{ friend_id }}" style="width: 20px; height: 20px;">
-                    {{ username }}
-                </label>
-            {% endfor %}
+    <label class="form-label">Split Method</label>
+    <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+        <label style="display: flex; align-items: center; gap: 6px;">
+            <input type="radio" name="split_mode" value="equal" checked onchange="toggleSplitMode()"> Equal Split
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px;">
+            <input type="radio" name="split_mode" value="custom" onchange="toggleSplitMode()"> Custom Amounts
+        </label>
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="form-label">Split With</label>
+    {% for friend_id, username in friends %}
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #1a1a1a; border-radius: 8px; margin-bottom: 8px;">
+            <input type="checkbox" name="friends" value="{{ friend_id }}" class="friend-checkbox" onchange="updateCustomFields()" style="width: 20px; height: 20px;">
+            <span style="flex: 1;">{{ username }}</span>
+            <input type="number" step="0.01" name="custom_amount_{{ friend_id }}" 
+                   class="custom-amount-input" data-friend="{{ friend_id }}"
+                   placeholder="₹0.00" style="display: none; width: 100px; padding: 6px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--bg-badge); color: white;">
         </div>
+    {% endfor %}
+
+    <!-- Payer's own custom amount, shown only in custom mode -->
+    <div id="payer-custom-row" style="display: none; align-items: center; gap: 10px; padding: 12px; background: #1a1a1a; border-radius: 8px; margin-bottom: 8px;">
+        <span style="flex: 1;">You</span>
+        <input type="number" step="0.01" name="custom_amount_{{ current_user.id }}" 
+               placeholder="₹0.00" style="width: 100px; padding: 6px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--bg-badge); color: white;">
+    </div>
+</div>
+
+<script>
+function toggleSplitMode() {
+    const mode = document.querySelector('input[name="split_mode"]:checked').value;
+    const payerRow = document.getElementById('payer-custom-row');
+    
+    if (mode === 'custom') {
+        payerRow.style.display = 'flex';
+        updateCustomFields();
+    } else {
+        payerRow.style.display = 'none';
+        document.querySelectorAll('.custom-amount-input').forEach(input => input.style.display = 'none');
+    }
+}
+
+function updateCustomFields() {
+    const mode = document.querySelector('input[name="split_mode"]:checked').value;
+    if (mode !== 'custom') return;
+
+    document.querySelectorAll('.friend-checkbox').forEach(checkbox => {
+        const friendId = checkbox.value;
+        const amountInput = document.querySelector(`.custom-amount-input[data-friend="${friendId}"]`);
+        amountInput.style.display = checkbox.checked ? 'inline-block' : 'none';
+    });
+}
+</script>
 
         <button type="submit" class="btn-submit-full">Split Expense</button>
     </form>
