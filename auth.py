@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import database
 from models import User
 import secrets
+from email_utils import generate_otp, send_otp_email
 
 auth = Blueprint('auth', __name__)
 
@@ -28,19 +29,44 @@ def register():
             return render_template('register.html', error=error)
 
         existing_user = database.get_user_by_email(email)
+
         if existing_user:
             flash('Email already registered.', 'error')
             return redirect(url_for('auth.register'))
-        
-        hashed_password = generate_password_hash(password, method='scrypt')
 
-        success = database.add_user(name, email,hashed_password)
+        hashed_password = generate_password_hash(password, method='scrypt')
+        success = database.add_user(name, email, hashed_password)
+
         if success:
-            flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('auth.login'))
+            new_user = database.get_user_by_email(email)
+            user_id = new_user[0]
+
+            otp_code = generate_otp()
+            database.save_otp(user_id, otp_code)
+            send_otp_email(email, otp_code)
+
+            flash("We've sent a verification code to your email.", "info")
+            return redirect(url_for('auth.verify_otp_page', user_id=user_id))
         else:
-            error = "Email already registered"
+            flash("Something went wrong creating your account. Please try again.", "danger")
+            return redirect(url_for('auth.register'))
+
     return render_template('register.html')
+
+@auth.route('/verify-otp/<int:user_id>',methods=['GET','POST'])
+def verify_otp_page(user_id):
+        if request.method == 'POST':
+            submitted_code = request.form.get('otp_code', '').strip()
+            success = database.verify_otp(user_id, submitted_code)
+
+            if success:
+                flash('Email verified! Please log in.',"success")
+                return redirect(url_for('auth.login'))
+            
+            else:
+                    flash("Invalid or expired code. Please try again.", "danger")
+
+        return render_template('verify_otp.html', user_id=user_id)
 
 @auth.route('/login',methods=['GET','POST'])
 def login():
@@ -60,6 +86,9 @@ def login():
         if check_password_hash(stored_hash,password):
              user_passport = User(user_data[0],user_data[1], user_data[2])
 
+             if not user_data[4]:  # assuming is_verified is the 5th column now
+                 flash("Please verify your email before logging in.", "danger")
+                 return redirect(url_for('auth.verify_otp_page', user_id=user_data[0]))
              login_user(user_passport)
              return redirect(url_for('home'))
      

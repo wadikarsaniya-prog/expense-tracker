@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import config
+from datetime import datetime, timedelta
 
 DB_PATH = os.path.join("data","expenses.db")
 
@@ -15,9 +16,20 @@ def create_tables():
         name text not null,
         id integer primary key autoincrement,
         email text not null unique,
-        password_hash text not null
+        password_hash text not null,
+        is_verified integer default 0
     );
 """
+
+    otp_query = """
+    create table if not exists otp_codes(
+        id integer primary key autoincrement,
+        user_id integer not null,
+        code text not null,
+        expires_at text not null,
+        foreign key (user_id) references users (id)
+    );
+    """
 
     expenses_query = """
     create table if not exists expenses(
@@ -93,6 +105,7 @@ def create_tables():
         cursor.execute(friendship_query)
         cursor.execute(shared_expenses_query)
         cursor.execute(expense_split_query)
+        cursor.execute(otp_query)
     conn.commit()
 
 def add_user(name, email, password_hash) -> bool:
@@ -109,7 +122,7 @@ def add_user(name, email, password_hash) -> bool:
     
 def get_user_by_email(email):
     """ Finds a user profile during login validation. """
-    query = "SELECT id,name, email, password_hash FROM users WHERE email = ?;"
+    query = "SELECT id,name, email, password_hash, is_verified FROM users WHERE email = ?;"
     with connect() as conn:
         cursor = conn.cursor()
         cursor.execute(query, (email,))
@@ -117,7 +130,7 @@ def get_user_by_email(email):
 
 def get_user_by_id(user_id):
     """ Flask-Login automatically invokes this to keep track of active sessions. """
-    query = "SELECT id, name, email, password_hash FROM users WHERE id = ?;"
+    query = "SELECT id, name, email, password_hash, is_verified FROM users WHERE id = ?;"
     with connect() as conn:
         cursor = conn.cursor()
         cursor.execute(query, (user_id,))
@@ -299,7 +312,7 @@ def reject_friend_request(friendship_id, current_user_id):
 
 def create_shared_expenses(paid_by, amount, description, category, date, split_details):
     num_people = len(split_details)
-    
+
     with connect() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -388,6 +401,47 @@ def remove_friend(user_id, friend_id):
         cursor.execute(query, (user_id, friend_id, friend_id, user_id))
         conn.commit()
         return cursor.rowcount > 0
+
+def save_otp(user_id, code):
+    expires_at = (datetime.now() + timedelta(minutes=10)).strftime('%Y-%m-%d %H:%M:%S')
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "insert into otp_codes (user_id, code, expires_at) values (?, ?, ?)",
+            (user_id, code, expires_at)
+        )
+        conn.commit()
+
+def verify_otp(user_id, submitted_code):
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "select code, expires_at from otp_codes where user_id = ? order by id desc limit 1",
+            (user_id,)
+        )
+        result = cursor.fetchone()
+
+        if result is None:
+            return False
+        
+        stored_code, expires_at = result
+        expiry_time = datetime.strptime(expires_at, '%Y-%m-%d %H:%M:%S')
+
+        if datetime.now() > expiry_time:
+            return False
+        
+        if submitted_code != stored_code:
+            return False
+
+        cursor.execute("update users set is_verified = 1 where id = ?", (user_id,))
+        conn.commit()
+        return True
+    
+def mark_user_verified(user_id):
+    with connect() as conn:
+        cursor = conn.cursor()
+        cursor.execute("update users set is_verified = 1 where id = ?", (user_id,))
+        conn.commit()
 
 
 if __name__ == "__main__":

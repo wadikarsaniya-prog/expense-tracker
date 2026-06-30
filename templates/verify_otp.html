@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 400px; margin: 40px auto; padding: 20px; padding-bottom: 80px;">
+    <h2 style="text-align: center; margin-bottom: 20px;">Verify Your Email</h2>
+    <p style="text-align: center; color: var(--text-dim); margin-bottom: 20px;">
+        We've sent a 6-digit code to your email. Enter it below.
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, msg in messages %}
+                <div class="alert alert-{{ category }}" style="color: #ff4d4d; background: #ffe6e6; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+                    {{ msg }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('auth.verify_otp_page', user_id=user_id) }}" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+        <div>
+            <label style="display: block; margin-bottom: 5px;">Verification Code</label>
+            <input type="text" name="otp_code" required maxlength="6" 
+                   style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; text-align: center; font-size: 1.5rem; letter-spacing: 4px;">
+        </div>
+        <button type="submit" style="width: 100%; padding: 12px; border-radius: 8px; background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer;">
+            Verify
+        </button>
+    </form>
+</div>
+{% endblock %}

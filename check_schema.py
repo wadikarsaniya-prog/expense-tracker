@@ -2,11 +2,9 @@ import sqlite3
 
 conn = sqlite3.connect('data/expenses.db')
 
-tables_to_check = ['expense_splits', 'shared_expenses', 'friendships', 'users', 'expenses', 'categories']
-
-for table in tables_to_check:
+for table in ['users', 'otp_codes']:
     result = conn.execute(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name=?", 
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name=?",
         (table,)
     ).fetchone()
     print(f"--- {table} ---")
