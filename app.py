@@ -18,6 +18,10 @@ load_dotenv()
 database.create_tables()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-fallback-key')
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 oauth = OAuth(app)
 google = oauth.register(

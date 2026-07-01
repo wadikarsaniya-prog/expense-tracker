@@ -101,8 +101,8 @@ def login():
 @auth.route('/login/google')
 def google_login():
     redirect_uri = url_for('auth.google_callback', _external=True)
+    print(f"DEBUG - Redirect URI being used: {redirect_uri}")
     return current_app.extensions['authlib.integrations.flask_client'].google.authorize_redirect(redirect_uri)
-
 
 @auth.route('/login/google/callback')
 def google_callback():
